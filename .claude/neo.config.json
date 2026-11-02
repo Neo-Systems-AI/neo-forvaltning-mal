@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "neo": {
+    "environments": ["sandkasse", "produksjon"],
+    "defaultEnv": "sandkasse",
+    "byEnv": {
+      "sandkasse": { "mcpServer": "neo-sandkasse", "url": "https://<neo-adresse>" },
+      "produksjon": { "mcpServer": "neo-produksjon", "url": "https://<neo-adresse>" }
+    }
+  }
+}

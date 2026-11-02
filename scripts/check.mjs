@@ -5,9 +5,12 @@
 //   node scripts/check.mjs [--annotate] [--summary] [--offline] [--root <dir>]
 import { appendFileSync, existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import { execFileSync } from "node:child_process";
 
 export const CHECKS = [
-  { name: "kunde", about: "kunde.yaml finnes og har kunde, miljøer, godkjenner og versjoner" },
+  { name: "kunde", about: "kunde.yaml finnes og har kunde, godkjenner og versjoner" },
+  { name: "config", about: ".claude/neo.config.json er gyldig, har miljøene, og ingen hemmelighet står med verdi" },
+  { name: "hemmeligheter", about: "Ingen .env-fil eller nøkkel er committet" },
   { name: "oppsett", about: "Hver fil i oppsett/ og snapshots/ er gyldig JSON, og ingen rå svar er committet" },
   { name: "godkjenner", about: "CODEOWNERS nevner en ekte godkjenner" },
   { name: "versjon", about: "Malen og pluginen er på nyeste versjon" },
@@ -39,6 +42,50 @@ export function readYaml(text) {
   return out;
 }
 
+// En nøkkel med et navn som dette er en hemmelighet, og skal stå som { "$env": … }, aldri med verdien.
+export const SECRET_KEY = /(passord|password|secret|hemmelig|token|apikey|api_key|privatekey|private_key|nokkel|nøkkel|^key$|keypem)/i;
+
+export function checkConfig(root) {
+  const f = [];
+  const file = ".claude/neo.config.json";
+  if (!existsSync(join(root, file))) return [{ check: "config", file, message: "Mangler. Pluginene leser den; kjør /forvaltning:oppstart" }];
+  let data;
+  try {
+    data = JSON.parse(readFileSync(join(root, file), "utf8"));
+  } catch (e) {
+    return [{ check: "config", file, message: `Ikke gyldig JSON: ${e.message}` }];
+  }
+  if (data.version !== 1) f.push({ check: "config", file, message: "version må være 1" });
+  const envs = data.neo?.environments;
+  if (!Array.isArray(envs) || !envs.length) f.push({ check: "config", file, message: "neo.environments mangler" });
+  for (const [env, v] of Object.entries(data.neo?.byEnv ?? {})) {
+    if (!v?.mcpServer) f.push({ check: "config", level: "warn", file, message: `MCP-serveren for ${env} er ikke satt` });
+    if (String(v?.url ?? "").includes("<")) f.push({ check: "config", level: "warn", file, message: `Adressen til Neo for ${env} er ikke fylt ut` });
+  }
+  const walkJson = (x, path) => {
+    if (x && typeof x === "object" && !Array.isArray(x) && "$env" in x) return;
+    if (x && typeof x === "object") for (const [k, v] of Object.entries(x)) {
+      const p = path ? `${path}.${k}` : k;
+      if (SECRET_KEY.test(k) && typeof v === "string" && v && !/Dir$|File$/i.test(k)) f.push({ check: "config", file, message: `${p} står med verdi. En hemmelighet skal stå som {"$env": "…", "kilde": "…"}, og verdien ligge i kundens hvelv` });
+      walkJson(v, p);
+    }
+  };
+  walkJson(data, "");
+  return f;
+}
+
+// Filene git følger. I CI er det det som er committet; lokalt er en hentet .env.local ikke et funn før den legges til.
+export function tracked(root) {
+  try {
+    return execFileSync("git", ["ls-files"], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).split("\n").filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+export const checkCommitted = (files) =>
+  files.filter((p) => /(^|\/)(\.env(\.[^/]*)?|\.keys\/.*)$/.test(p) && !p.endsWith(".example")).map((p) => ({ check: "hemmeligheter", file: p, message: "Hemmeligheter er committet. Fjern fila fra git, og bytt verdiene i hvelvet: de er ikke hemmelige lenger" }));
+
 const newer = (a, b) => {
   const [x, y] = [a, b].map((v) => String(v).split(".").map(Number));
   for (let i = 0; i < 3; i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) > (y[i] ?? 0);
@@ -52,9 +99,10 @@ export async function run(root, { offline = false, fetchText = (u) => fetch(u).t
   if (!existsSync(kf)) f.push({ check: "kunde", file: "kunde.yaml", message: "Mangler. Kundefila sier hvem repoet forvalter for" });
   else {
     kunde = readYaml(readFileSync(kf, "utf8"));
-    for (const k of ["kunde", "miljoer", "godkjenner", "verktoy"]) if (!kunde[k]) f.push({ check: "kunde", file: "kunde.yaml", message: `«${k}» mangler` });
-    for (const [env, v] of Object.entries(kunde.miljoer ?? {})) if (!v?.mcp || v.mcp.includes("<")) f.push({ check: "kunde", level: "warn", file: "kunde.yaml", message: `MCP-adressen for ${env} er ikke fylt ut` });
+    for (const k of ["kunde", "godkjenner", "verktoy"]) if (!kunde[k]) f.push({ check: "kunde", file: "kunde.yaml", message: `«${k}» mangler` });
   }
+  f.push(...checkConfig(root));
+  f.push(...checkCommitted(tracked(root)));
   for (const file of [...walk(join(root, "oppsett")), ...walk(join(root, "snapshots"))]) {
     const rel = relative(root, file);
     if (/(^|\/)raw\//.test(rel)) f.push({ check: "oppsett", file: rel, message: "Et rått svar er committet. raw/ skal stå i .gitignore" });

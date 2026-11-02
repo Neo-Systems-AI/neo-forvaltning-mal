@@ -1,4 +1,7 @@
 snapshots/*/raw/
+reports/*/raw/
+# Hemmelighetene fra kundens hvelv, hentet lokalt av et menneske (/forvaltning:hemmeligheter). Committes aldri.
 .env
 .env.*
+.keys/
 .DS_Store

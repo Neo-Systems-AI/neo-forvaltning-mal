@@ -4,14 +4,31 @@ import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readYaml, run } from "./check.mjs";
+import { checkCommitted, checkConfig, readYaml, run } from "./check.mjs";
 
 const here = join(dirname(fileURLToPath(import.meta.url)), "..");
 const copy = () => {
   const root = mkdtempSync(join(tmpdir(), "mal-"));
-  for (const f of ["kunde.yaml", "VERSION", ".github", "oppsett", "snapshots"]) cpSync(join(here, f), join(root, f), { recursive: true });
+  for (const f of ["kunde.yaml", "VERSION", ".github", "oppsett", "snapshots", ".claude"]) cpSync(join(here, f), join(root, f), { recursive: true });
   return root;
 };
+
+test("en hemmelighet med verdi i config-fila stoppes; en referanse slipper", () => {
+  const root = copy();
+  writeFileSync(join(root, ".claude/neo.config.json"), JSON.stringify({
+    version: 1,
+    neo: { environments: ["sandkasse"], byEnv: { sandkasse: { mcpServer: "neo-sandkasse" } } },
+    fiks: { byEnv: { test: { passord: "hemmelig", svarinnPassord: { $env: "X", kilde: "azure-keyvault:kv/x" }, nokkelFile: ".keys/x.pem" } } },
+  }));
+  const fails = checkConfig(root).filter((x) => x.level !== "warn");
+  assert.equal(fails.length, 1);
+  assert.match(fails[0].message, /fiks\.byEnv\.test\.passord står med verdi/);
+});
+
+test("en committet .env.local eller nøkkel stoppes", () => {
+  const found = checkCommitted([".env.local", ".keys/mp.pem", "kunde.yaml", ".env.example"]).map((x) => x.file);
+  assert.deepEqual(found, [".env.local", ".keys/mp.pem"]);
+});
 
 test("kundefila leses", () => {
   const y = readYaml('kunde:\n  navn: "A"\nverktoy:\n  mal: "0.1.0" # kommentar\n');

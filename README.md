@@ -3,30 +3,41 @@
 Malen for et repo som forvalter oppsettet til én kommune eller virksomhet i [Neo](https://neosystems.ai): sakstypene,
 statusløpene, feltene, oppgavemalene og flytene som filer, endret med PR og godkjent av kunden før de tas i bruk.
 
-Repoet ditt er ditt. Malen har bare struktur, regler og låste versjoner; alt innhold kommer fra pluginen
-[`forvaltning`](https://github.com/Neo-Systems-AI/neo-forvaltning), som oppdateres sentralt.
+Repoet ditt er ditt. Malen har bare struktur, regler og låste versjoner; alt innhold kommer fra pluginene i
+[`neo-forvaltning`](https://github.com/Neo-Systems-AI/neo-forvaltning), som oppdateres sentralt.
+
+**Et repo er én måte å forvalte på, ikke den eneste.** Oppsettet kan også forvaltes rett i Neo. Repoet gir det Neo
+alene ikke gir: oppsettet som filer med historikk, en plan kunden godkjenner i en PR før noe endres, og verktøy som
+sammenligner det Neo gjør med det de eksterne systemene selv sier. Malen bruker GitHub fordi det er git-verktøyet vi
+kobler til i dag.
 
 ## Kom i gang
 
 1. **Lag repoet:** «Use this template» → velg **din egen organisasjon** og **Private**. Et repo laget fra en mal er
    ikke en fork, så det kan være privat.
-2. **Fyll ut `kunde.yaml`** og sett godkjenneren i `.github/CODEOWNERS`.
-3. **Sett regler for `main`** (Settings → Rules → Rulesets): krev PR, krev at `check` er grønn, krev godkjenning fra
+2. **Sett regler for `main`** (Settings → Rules → Rulesets): krev PR, krev at `check` er grønn, krev godkjenning fra
    CODEOWNERS, og tillat bare merge commit. På et privat repo krever dette GitHub Team eller høyere.
-4. **Koble Claude Code til Neo.** Org-admin i Neo lager en kobling under *API-klienter → Koble til Claude*, slaget
-   «Claude Code», én i sandkassen og én i produksjonen. Neo viser en kommando; legg den inn i repoet med navnet for
-   miljøet:
+3. **Start Claude Code i repoet**, godta markedsplassen `neo-forvaltning`, og kjør `/forvaltning:oppstart`. Den
+   intervjuer, fyller ut `kunde.yaml`, `.claude/neo.config.json` og `CODEOWNERS`, kobler til Neo og skrur på
+   pluginene du trenger. Org-admin i Neo må først ha laget en kobling for Claude Code (*API-klienter → Koble til
+   Claude*, slaget «Claude Code»), én i sandkassen og én i produksjonen.
+4. **Hent hemmelighetene** til systemene du skal kalle (se under), og logg inn i Neo med `/mcp`.
+5. **Ta det første snapshotet:** `/forvaltning:snapshot sandkasse`, og commit det på en branch med en PR.
 
-   ```bash
-   claude mcp add --scope project --transport http --client-id <klient-id> neo-sandkasse <adresse>/api/mcp
-   claude mcp add --scope project --transport http --client-id <klient-id> neo-produksjon <adresse>/api/mcp
-   ```
+## Pluginene og config-fila
 
-   Klient-ID-en er ikke en hemmelighet (Claude Code er en offentlig klient), så `.mcp.json` kan committes. Hver
-   person logger inn som seg selv med `/mcp`.
-5. **Start Claude Code i repoet** og godta markedsplassen `neo-forvaltning` når du blir spurt. Pluginen `forvaltning`
-   er slått på i `.claude/settings.json`.
-6. **Ta det første snapshotet:** `/forvaltning:snapshot sandkasse`, og commit det.
+Alle pluginene leser `.claude/neo.config.json`: miljøene i Neo og MCP-serveren for hvert, og én del per plugin. Et
+eksternt system (Altinn, Documaster, KS Fiks, Kontaktregisteret og andre) har sine egne miljøer i sin del, for
+eksempel `test` og `produksjon`. `/<plugin>:env` viser hva pluginen trenger og hva som mangler. En plugin skrus på
+med `/forvaltning:oppstart`, eller i `.claude/settings.json`.
+
+## Hemmelighetene
+
+**Kundens hemmeligheter er kundens:** Maskinporten-klientene, nøklene, virksomhetssertifikatet og passordene ligger i
+kundens hvelv. Config-fila sier bare hvor hver av dem ligger (`{"$env": "…", "kilde": "azure-keyvault:<hvelv>/<navn>"}`),
+aldri verdien. Et menneske henter dem lokalt med sin egen innlogging (`/forvaltning:hemmeligheter`) til `.env.local`
+og `.keys/`, som aldri committes. Når noen forvalter for kunden, bruker de kundens hvelv med en tilgang kunden har gitt
+og kan trekke tilbake.
 
 ## Slik endres oppsettet
 
@@ -47,6 +58,7 @@ Endringer gjort i Neo utenom repoet dukker opp i neste snapshot. Ta dem inn i `o
 | Hva | Hvor | Skrevet av |
 |---|---|---|
 | Kundefila | `kunde.yaml` | et menneske |
+| Config-fila for pluginene | `.claude/neo.config.json` | et menneske, eller `/forvaltning:oppstart` |
 | Beslutningsloggen | `beslutninger.md` | et menneske, eller agenten på oppdrag |
 | Det ønskede oppsettet | `oppsett/` | et menneske, gjennom PR |
 | Det som gjøres for hånd | `oppsett/manuelt/` | et menneske |

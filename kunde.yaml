@@ -1,14 +1,8 @@
-# Kundefila: hvem dette repoet forvalter for, hvor Neo kjører, og hvem som godkjenner. Fyll ut når repoet er laget.
+# Kundefila: hvem dette repoet forvalter for, og hvem som godkjenner. Det tekniske (miljøene, MCP-serverne og
+# systemene) står i .claude/neo.config.json. /forvaltning:oppstart fyller ut begge.
 kunde:
   navn: "Eksempel kommune"
   organisasjonsnummer: ""
-
-# MCP-serveren for hvert miljø heter neo-sandkasse og neo-produksjon i .mcp.json (se README).
-miljoer:
-  sandkasse:
-    mcp: "https://<neo-adresse>/api/mcp"
-  produksjon:
-    mcp: "https://<neo-adresse>/api/mcp"
 
 # Den som godkjenner en endring hos kunden. Står også i .github/CODEOWNERS.
 godkjenner:
