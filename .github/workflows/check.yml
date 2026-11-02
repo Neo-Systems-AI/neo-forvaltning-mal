@@ -1,0 +1,49 @@
+# Kontrollen for kunderepoet: hver sjekk er sin egen jobb og sin egen linje i PR-en. Jobben `check` samler dem; gjør
+# den påkrevd i regelsettet for `main` (se README).
+name: check
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  repo:
+    name: repo (kundefil, oppsett, godkjenner, versjon)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test "scripts/*.test.mjs"
+      - run: node scripts/check.mjs --annotate --summary
+
+  secrets:
+    name: secrets (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Ingen hemmeligheter i endringen
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then OPTS="origin/${{ github.base_ref }}..HEAD"; else OPTS="${{ github.event.before }}..${{ github.sha }}"; fi
+          case "$OPTS" in 0000000000000000000000000000000000000000*) OPTS="HEAD~1..HEAD";; esac
+          if docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.21.2 git --no-banner --redact --log-opts="$OPTS" .; then
+            printf '## Hemmeligheter\n\n✅ gitleaks fant ingen hemmeligheter i `%s`.\n' "$OPTS" >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf '## Hemmeligheter\n\n❌ gitleaks fant noe som ligner en hemmelighet i `%s`: se loggen (verdiene er skjult).\n' "$OPTS" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+  check:
+    name: check
+    if: always()
+    needs: [repo, secrets]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Alle sjekkene over er grønne
+        run: |
+          printf '## check\n\n| Jobb | Resultat |\n|---|---|\n| repo | %s |\n| secrets | %s |\n' "${{ needs.repo.result }}" "${{ needs.secrets.result }}" >> "$GITHUB_STEP_SUMMARY"
+          [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = "false" ]

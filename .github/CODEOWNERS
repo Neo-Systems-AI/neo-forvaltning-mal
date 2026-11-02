@@ -1,0 +1,4 @@
+# Den som godkjenner en endring i oppsettet. Bytt ut med godkjenneren i kunde.yaml, for eksempel @din-org/godkjennere.
+/oppsett/      @ENDRE-MEG
+/kunde.yaml    @ENDRE-MEG
+/.github/      @ENDRE-MEG

@@ -1,0 +1,10 @@
+{
+  "extraKnownMarketplaces": {
+    "neo-forvaltning": {
+      "source": { "source": "github", "repo": "Neo-Systems-AI/neo-forvaltning" }
+    }
+  },
+  "enabledPlugins": {
+    "forvaltning@neo-forvaltning": true
+  }
+}
