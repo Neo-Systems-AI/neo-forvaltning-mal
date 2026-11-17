@@ -51,8 +51,8 @@ test("rå svar og ugyldig JSON stoppes", async () => {
 });
 
 test("en nyere versjon gir et gult funn", async () => {
-  const fetchText = async (u) => (u.endsWith("VERSION") ? "0.2.0\n" : JSON.stringify({ plugins: [{ name: "forvaltning", version: "0.1.0" }] }));
+  const fetchText = async (u) => (u.endsWith("VERSION") ? "0.3.0\n" : JSON.stringify({ plugins: [{ name: "forvaltning", version: "0.1.0" }] }));
   const f = (await run(copy(), { fetchText })).filter((x) => x.check === "versjon");
   assert.equal(f.length, 1);
-  assert.match(f[0].message, /Malen er 0.2.0/);
+  assert.match(f[0].message, /Malen er 0.3.0/);
 });

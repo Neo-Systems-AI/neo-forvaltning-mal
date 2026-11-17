@@ -39,6 +39,9 @@ aldri verdien. Et menneske henter dem lokalt med sin egen innlogging (`/forvaltn
 og `.keys/`, som aldri committes. Når noen forvalter for kunden, bruker de kundens hvelv med en tilgang kunden har gitt
 og kan trekke tilbake.
 
+Hva som skal i hvelvet, under hvilke navn, og hvordan verdiene og tilstanden går mellom kunden og forvalteren
+under oppstarten, står i [`medvirkning.md`](./medvirkning.md).
+
 ## Slik endres oppsettet
 
 | Steg | Hvem | Hvordan |
@@ -60,6 +63,7 @@ Endringer gjort i Neo utenom repoet dukker opp i neste snapshot. Ta dem inn i `o
 | Kundefila | `kunde.yaml` | et menneske |
 | Config-fila for pluginene | `.claude/neo.config.json` | et menneske, eller `/forvaltning:oppstart` |
 | Beslutningsloggen | `beslutninger.md` | et menneske, eller agenten på oppdrag |
+| Det kunden gjør i egne systemer, og hvordan verdiene går | `medvirkning.md` | forvalteren, med kunden |
 | Det ønskede oppsettet | `oppsett/` | et menneske, gjennom PR |
 | Det som gjøres for hånd | `oppsett/manuelt/` | et menneske |
 | Det som kjører | `snapshots/<miljø>/oppsett/` | generert |
