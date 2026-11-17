@@ -17,12 +17,14 @@ forvalteren. Dette er et startpunkt fra den første implementeringen. Bygg vider
 - **Fire slag innhold, med hver sin farge:**
   - oppskriften for kundens egne systemer (oransje);
   - det som legges i hvelvet (blå);
-  - det kunden fyller inn i dokumentet: valg, lister, navn og datoer (grønn);
+  - navn, datoer og valg som ikke legges inn i Neo (grønn);
   - det forvalteren lager i Neo og kunden trenger, for eksempel adresser å lime inn (grå).
 - **Kunden eier sin egen systemadministrasjon.** Oppskriften sier hva kunden gjør, hvor og i hvilken rekkefølge, og når
-  det er ferdig. Den har ingen kommandoer, og kunden velger selv verktøyet. Oppsettet inne i Neo gjør forvalteren.
-- **Spør ikke om det Neo henter selv,** som appene i Altinn-organisasjonen, rollene i Folkeregisteret og
-  forsendelsestypene.
+  det er ferdig. Den har ingen kommandoer, og kunden velger selv verktøyet.
+- **Spør ikke om det Neo henter selv, eller om det som legges inn i Neo,** som appene i Altinn-organisasjonen,
+  meldingstjenestene, rollene i Folkeregisteret, forsendelsestypene, postboksene og standard avsender. Dokumentet har
+  oppskriftene for kundens egne systemer og det som legges i hvelvet; valgene tas i arbeidsmøtene.
+- **Utløpsdatoen på en hemmelighet settes på hemmeligheten i hvelvet,** ikke i dokumentet.
 - **Prøv ett ledd før det neste slås på,** for eksempel innloggingen før brukerprovisjoneringen.
 
 ## Oppgavene
@@ -36,7 +38,8 @@ leverandøren, står som et steg.
 ### Hvelvet
 
 1. Lag et Azure Key Vault i kundens Azure, med tilgangsmodellen Azure RBAC.
-2. Gi forvalterens personer rollen Key Vault Secrets Officer på hvelvet.
+2. Inviter forvalterens personer som gjestebrukere i kundens Entra ID.
+3. Gi dem rollen Key Vault Secrets Officer på hvelvet.
 
 ### Innlogging og brukere (Entra ID)
 
@@ -48,7 +51,7 @@ tildele grupper til appen. Tildeling av grupper krever Entra ID P1 eller P2.
 2. Sett appen til kun egen organisasjon, og legg det valgfrie claimet `upn` på ID-tokenet.
 3. Gi administratorsamtykke for `openid` og `profile`.
 4. Lag sikkerhetsgruppene, med brukerne som direkte medlemmer, og tildel dem til appen. Nestede grupper telles ikke.
-5. Lag én client secret, og noter utløpsdatoen.
+5. Lag én client secret, og sett utløpsdatoen på hemmeligheten i hvelvet.
 6. Legg inn redirect-adressen fra forvalteren, tegn for tegn, og TXT-posten for domenet i DNS. Verdien i TXT-posten
    gjelder i 7 døgn.
 7. Prøv innloggingen med én bruker før provisjoneringen slås på.
@@ -71,15 +74,15 @@ ut av appen, mister tilgangen med en gang. Medlemmer Entra styrer, fjernes i Ent
 aldri fra Entra. Tenant, domene og innloggingsoppsettet kan ikke endres før provisjoneringen er slått av. Client secret
 byttes før utløpsdatoen.
 
-Hvelvet: `entra-tenant-id`, `entra-sso-client-id`, `entra-sso-client-secret`, `entra-grupper`, og `entra-scim-token`
-fra forvalteren.
+Hvelvet: `entra-tenant-id`, `entra-sso-client-id`, `entra-sso-client-secret`, `entra-domene` (domenet de ansatte
+logger inn med), og `entra-scim-token` fra forvalteren.
 
 ### Postboksene (Exchange Online)
 
 1. Lag en app i Entra ID, kun for egen organisasjon.
 2. Gi appen de delegerte e-posttillatelsene forvalteren oppgir, og gi administratorsamtykke. Gi den ingen
    e-posttillatelser som applikasjonstillatelser i Entra ID: de ville gjelde alle postboksene.
-3. Lag én client secret, og noter utløpsdatoen.
+3. Lag én client secret, og sett utløpsdatoen på hemmeligheten i hvelvet.
 4. Lag de felles postboksene hvis de ikke finnes. Neo kobler bare til felles postbokser.
 5. Registrer appen som tjenesteprinsipal i Exchange Online, og lag et omfang (management scope) med bare de felles
    postboksene.
@@ -98,7 +101,7 @@ selv søker, viser eller arkiverer. Da kaller Neo med saksbehandlerens ID-token,
 Neo støtter også to registreringer, og Documasters egen innlogging; da lager Documaster klientene.
 
 1. Finn app-ID-URI-en til Documaster-appen i kundens Entra ID. Den gir scopet for tjenestekontoen.
-2. Lag én app-registrering med én client secret, og noter utløpsdatoen.
+2. Lag én app-registrering med én client secret, og sett utløpsdatoen på hemmeligheten i hvelvet.
 3. Tjenestekontoen henter token med client credentials og scopet app-ID-URI-en etterfulgt av `/.default`.
 4. Innloggingen bruker samme registrering med `openid`, `profile`, `email` og `offline_access`. Redirect-adressen fra
    Neo legges inn under Web, og i Neo velges «Bruk samme app-registrering».
