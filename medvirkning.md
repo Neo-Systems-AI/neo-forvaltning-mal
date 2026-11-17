@@ -92,22 +92,25 @@ Hvelvet: `exchange-client-id`, `exchange-client-secret`.
 
 ### Arkivet (Documaster med Entra ID)
 
-Neo kobles til Documaster gjennom kundens Entra ID, med to app-registreringer. Neo støtter også Documasters egen
-innlogging; da lager Documaster klientene.
+Neo kobles til Documaster gjennom én app-registrering i kundens Entra ID, brukt på to måter: som tjenestekonto
+(`client_credentials`) når Neo arkiverer i bakgrunnen, og til innlogging (`authorization_code`) når en saksbehandler
+selv søker, viser eller arkiverer. Da kaller Neo med saksbehandlerens ID-token, og Documaster ser hvem som gjør det.
+Neo støtter også to registreringer, og Documasters egen innlogging; da lager Documaster klientene.
 
 1. Finn app-ID-URI-en til Documaster-appen i kundens Entra ID. Den gir scopet for tjenestekontoen.
-2. Tjenestekontoen: en app-registrering med én client secret, som henter token med client credentials og scopet
-   app-ID-URI-en etterfulgt av `/.default`.
-3. Innlogging på vegne av brukeren: en egen app-registrering med én client secret og `openid`, `profile`, `email` og
-   `offline_access`. Redirect-adressen fra Neo legges inn under Web.
-4. Bestill et eget testarkiv med egne arkivdeler hos Documaster.
-5. Gi tjenestekontoen tilgang i Documaster til å lese arkivstrukturen og kodelistene, og opprette og oppdatere
+2. Lag én app-registrering med én client secret, og noter utløpsdatoen.
+3. Tjenestekontoen henter token med client credentials og scopet app-ID-URI-en etterfulgt av `/.default`.
+4. Innloggingen bruker samme registrering med `openid`, `profile`, `email` og `offline_access`. Redirect-adressen fra
+   Neo legges inn under Web, og i Neo velges «Bruk samme app-registrering».
+5. Gi Documaster klient-ID-en, så de godtar innloggingen fra den.
+6. Bestill et eget testarkiv med egne arkivdeler hos Documaster.
+7. Gi tjenestekontoen tilgang i Documaster til å lese arkivstrukturen og kodelistene, og opprette og oppdatere
    saksmapper, journalposter og dokumenter i arkivdelene Neo skal bruke.
-6. Kontroller arkivstrukturen: arkivdeler, klassifikasjon, administrative enheter, skjermingskoder og journalposttyper.
+8. Kontroller arkivstrukturen: arkivdeler, klassifikasjon, administrative enheter, skjermingskoder og journalposttyper.
 
-Ferdig når testen i Neo henter token og leser arkivdelene. Hvelvet: `documaster-api-url`,
-`documaster-tjenestekonto-client-id`, `-client-secret`, `-scope`, `documaster-bruker-client-id`, `-client-secret`,
-`-scope`. Tenant-ID-en er `entra-tenant-id`.
+Ferdig når testen i Neo henter token og leser arkivdelene, og en saksbehandler kan logge inn mot Documaster fra Neo.
+Hvelvet: `documaster-api-url`, `documaster-client-id`, `documaster-client-secret`, `documaster-scope`. Tenant-ID-en er
+`entra-tenant-id`.
 
 ### Maskinporten
 
