@@ -1,11 +1,16 @@
 #!/usr/bin/env node
-// Kontrollen for kunderepoet: kundefila er fylt ut, oppsettet er gyldige filer, ingen rå svar er committet, og
+// Kontrollen for kunderepoet: kundefila er fylt ut, oppsettet er gyldige filer, ingen rå svar er committet, researchen,
+// løsningene, integrasjonene, personaene og testene har formen sin, lista over det kunden må gjøre er oppdatert, og
 // repoet sier fra når malen eller pluginen har en nyere versjon. Rødt stopper PR-en; gult sier fra uten å stoppe.
 //
 //   node scripts/check.mjs [--annotate] [--summary] [--offline] [--root <dir>]
 import { appendFileSync, existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { execFileSync } from "node:child_process";
+import { parseYaml } from "./yaml.mjs";
+import { checkResearch, RESEARCH_CHECKS } from "./research.mjs";
+import { checkStruktur, STRUKTUR_CHECKS } from "./struktur.mjs";
+import { checkListe, HOS_KUNDEN_CHECKS } from "./hos-kunden.mjs";
 
 export const CHECKS = [
   { name: "kunde", about: "kunde.yaml finnes og har kunde, godkjenner og versjoner" },
@@ -13,6 +18,9 @@ export const CHECKS = [
   { name: "hemmeligheter", about: "Ingen .env-fil eller nøkkel er committet" },
   { name: "oppsett", about: "Hver fil i oppsett/ og snapshots/ er gyldig JSON, og ingen rå svar er committet" },
   { name: "godkjenner", about: "CODEOWNERS nevner en ekte godkjenner" },
+  ...RESEARCH_CHECKS,
+  ...STRUKTUR_CHECKS,
+  ...HOS_KUNDEN_CHECKS,
   { name: "versjon", about: "Malen og pluginen er på nyeste versjon" },
 ];
 
@@ -22,25 +30,6 @@ export const UPSTREAM = {
 };
 
 const walk = (dir) => (existsSync(dir) ? readdirSync(dir).flatMap((n) => (statSync(join(dir, n)).isDirectory() ? walk(join(dir, n)) : [join(dir, n)])) : []);
-
-// Bare det vi trenger av YAML: «nøkkel: verdi» med innrykk, så sjekken ikke har avhengigheter.
-export function readYaml(text) {
-  const out = {};
-  const stack = [{ indent: -1, obj: out }];
-  for (const raw of text.split("\n")) {
-    const line = raw.replace(/\s+#.*$/, "");
-    const m = line.match(/^(\s*)([\wæøåÆØÅ-]+):\s*(.*)$/);
-    if (!m || line.trim().startsWith("#")) continue;
-    const indent = m[1].length;
-    while (stack.at(-1).indent >= indent) stack.pop();
-    const parent = stack.at(-1).obj;
-    if (m[3] === "") {
-      parent[m[2]] = {};
-      stack.push({ indent, obj: parent[m[2]] });
-    } else parent[m[2]] = m[3].replace(/^["']|["']$/g, "");
-  }
-  return out;
-}
 
 // En nøkkel med et navn som dette er en hemmelighet, og skal stå som { "$env": … }, aldri med verdien.
 export const SECRET_KEY = /(passord|password|secret|hemmelig|token|apikey|api_key|privatekey|private_key|nokkel|nøkkel|^key$|keypem)/i;
@@ -98,7 +87,11 @@ export async function run(root, { offline = false, fetchText = (u) => fetch(u).t
   let kunde = {};
   if (!existsSync(kf)) f.push({ check: "kunde", file: "kunde.yaml", message: "Mangler. Kundefila sier hvem repoet forvalter for" });
   else {
-    kunde = readYaml(readFileSync(kf, "utf8"));
+    try {
+      kunde = parseYaml(readFileSync(kf, "utf8")) ?? {};
+    } catch (e) {
+      f.push({ check: "kunde", file: "kunde.yaml", message: `Kan ikke leses som YAML (${e.message})` });
+    }
     for (const k of ["kunde", "godkjenner", "verktoy"]) if (!kunde[k]) f.push({ check: "kunde", file: "kunde.yaml", message: `«${k}» mangler` });
   }
   f.push(...checkConfig(root));
@@ -114,6 +107,9 @@ export async function run(root, { offline = false, fetchText = (u) => fetch(u).t
       }
     }
   }
+  f.push(...checkResearch(root));
+  f.push(...checkStruktur(root, { secretKey: SECRET_KEY }));
+  f.push(...checkListe(root));
   const co = join(root, ".github/CODEOWNERS");
   if (!existsSync(co) || /@ENDRE-MEG/.test(readFileSync(co, "utf8"))) f.push({ check: "godkjenner", level: "warn", file: ".github/CODEOWNERS", message: "Godkjenneren er ikke satt. Uten den kan hvem som helst med skrivetilgang godkjenne en endring" });
   if (!offline) {
@@ -139,7 +135,7 @@ export function summary(findings) {
     const fails = mine.filter((x) => x.level === "fail").length;
     return `| ${name} | ${about} | ${fails ? `❌ ${fails} å rette` : mine.length ? `⚠️ ${mine.length} å se på` : "✅ ok"} |`;
   });
-  const details = findings.length ? `\n<details><summary>Funnene</summary>\n\n${findings.map((x) => `- ${x.level === "fail" ? "❌" : "⚠️"} \`${x.file}\`: ${x.message}`).join("\n")}\n</details>\n` : "";
+  const details = findings.length ? `\n<details><summary>Funnene</summary>\n\n${findings.map((x) => `- ${x.level === "fail" ? "❌" : "⚠️"} \`${x.file}${x.line ? `:${x.line}` : ""}\`: ${x.message}`).join("\n")}\n</details>\n` : "";
   return `## Kunderepoet\n\n| Sjekk | Hva den sjekker | Resultat |\n|---|---|---|\n${rows.join("\n")}\n${details}`;
 }
 
@@ -147,8 +143,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
   const root = args.includes("--root") ? args[args.indexOf("--root") + 1] : process.cwd();
   const findings = await run(root, { offline: args.includes("--offline") });
-  for (const x of findings) console.log(`${x.level === "fail" ? "✗" : "!"} ${x.file}: ${x.message}`);
-  if (args.includes("--annotate")) for (const x of findings) console.log(`::${x.level === "fail" ? "error" : "warning"} file=${x.file},title=${x.check}::${esc(x.message)}`);
+  for (const x of findings) console.log(`${x.level === "fail" ? "✗" : "!"} ${x.file}${x.line ? `:${x.line}` : ""}: ${x.message}`);
+  if (args.includes("--annotate")) for (const x of findings) console.log(`::${x.level === "fail" ? "error" : "warning"} file=${x.file}${x.line ? `,line=${x.line}` : ""},title=${x.check}::${esc(x.message)}`);
   if (args.includes("--summary")) {
     const text = summary(findings);
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, text);
