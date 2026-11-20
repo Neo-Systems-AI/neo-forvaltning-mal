@@ -1,6 +1,6 @@
 ## Hva endres, og hvorfor
 
-<!-- I klartekst, per sakstype. Lenke til raden i beslutninger.md. -->
+<!-- I klartekst, per løsning. Hvorfor står her; det som er avgjort og varer, står der det gjelder. -->
 
 ## Planen
 
@@ -13,4 +13,3 @@
 - [ ] Gjennomført i sandkassen (`/forvaltning:gjennomfor`), med snapshot etter
 - [ ] Testet i sandkassen
 - [ ] Promotert til produksjon av org-admin i Neo
-- [ ] Rad i `beslutninger.md`

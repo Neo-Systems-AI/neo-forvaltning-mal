@@ -6,8 +6,7 @@
   },
   "enabledPlugins": {
     "forvaltning@neo-forvaltning": true,
-    "helse@neo-forvaltning": true,
-    "konfig@neo-forvaltning": true,
-    "ki@neo-forvaltning": true
+    "solution@neo-forvaltning": true,
+    "monitoring@neo-forvaltning": true
   }
 }

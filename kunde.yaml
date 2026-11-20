@@ -16,5 +16,5 @@ forvalter:
 
 # Versjonene repoet er laget for. Sjekken sier fra når en nyere finnes.
 verktoy:
-  mal: "0.2.0"
+  mal: "0.3.0"
   forvaltning: "0.1.0"
