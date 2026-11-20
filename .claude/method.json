@@ -1,0 +1,4 @@
+{
+  "setup": [],
+  "check": "node --test \"scripts/*.test.mjs\" && node scripts/check.mjs"
+}
