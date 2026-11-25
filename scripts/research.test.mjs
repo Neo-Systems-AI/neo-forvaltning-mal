@@ -83,7 +83,7 @@ test("et krav trenger flyt, hvorfor og en kilde som finnes, og en id som er bruk
   assert.deepEqual(f.sort(), [
     "Id-en frist-mottatt er brukt før, i losninger/klage/3-krav/03-forlop.md",
     "frist-mottatt: 2-forstaelse/finnes-ikke.md finnes ikke (stien er relativ til losninger/klage/)",
-    "rar: yaml-blokken kan ikke leses (linje 1: lista mangler «]»)",
+    "rar: yaml-blokken kan ikke leses (linje 1: Flow sequence in block collection must be sufficiently indented and end with a ])",
     "vurdering: K9 står ikke i registeret (losninger/tilskudd/1-kilder/kilder.md)",
     "vurdering: flyt må være deterministisk, agentisk, menneske",
     "vurdering: hvorfor mangler",
@@ -93,6 +93,9 @@ test("et krav trenger flyt, hvorfor og en kilde som finnes, og en id som er bruk
 });
 
 test("items leser overskriften og blokken", () => {
-  const [a] = items("## a Tittelen her\n\n```yaml\nkilde: [K1, K2]\nhvorfor: Fordi: det står der.\n```\n");
+  const [a] = items("## a Tittelen her\n\n```yaml\nkilde: [K1, K2]\nhvorfor: \"Fordi: det står der.\"\n```\n");
   assert.deepEqual([a.id, a.title, a.line, a.fields], ["a", "Tittelen her", 1, { kilde: ["K1", "K2"], hvorfor: "Fordi: det står der." }]);
+  // YAML er YAML: et kolon med mellomrom i en tekst uten anførselstegn er en feil, og sies med linjen.
+  const [b] = items("## b B\n\n```yaml\nhvorfor: Fordi: det står der.\n```\n");
+  assert.match(b.error, /^linje 1: /);
 });

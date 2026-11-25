@@ -1,4 +1,4 @@
 {
-  "setup": [],
-  "check": "node --test \"scripts/*.test.mjs\" && node scripts/check.mjs"
+  "setup": ["npm ci --engine-strict"],
+  "check": "node --test && node scripts/check.mjs"
 }

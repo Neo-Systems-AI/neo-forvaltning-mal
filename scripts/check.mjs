@@ -1,67 +1,91 @@
 #!/usr/bin/env node
-// Kontrollen for kunderepoet: kundefila er fylt ut, oppsettet er gyldige filer, ingen rå svar er committet, researchen,
-// løsningene, integrasjonene, personaene og testene har formen sin, lista over det kunden må gjøre er oppdatert, og
-// repoet sier fra når malen eller pluginen har en nyere versjon. Rødt stopper PR-en; gult sier fra uten å stoppe.
+// Kontrollen for repoet: repo.yaml og konfigfila er fylt ut, ingen hemmelighet er committet, researchen, løsningene,
+// integrasjonene, personaene og testene har formen sin, konfigfilene i 5-oppsett/ er gyldige mot skjemaet fra Neo, og
+// lista over det kunden må gjøre er oppdatert. Rødt stopper PR-en; gult sier fra uten å stoppe.
 //
-//   node scripts/check.mjs [--annotate] [--summary] [--offline] [--root <dir>]
-import { appendFileSync, existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+//   node scripts/check.mjs [--annotate] [--summary] [--root <dir>]
+import { appendFileSync, existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { parseYaml } from "./yaml.mjs";
 import { checkResearch, RESEARCH_CHECKS } from "./research.mjs";
 import { checkStruktur, STRUKTUR_CHECKS } from "./struktur.mjs";
+import { checkOppsett, OPPSETT_CHECKS } from "./oppsett.mjs";
 import { checkListe, HOS_KUNDEN_CHECKS } from "./hos-kunden.mjs";
 
 export const CHECKS = [
-  { name: "kunde", about: "kunde.yaml finnes og har kunde, godkjenner og versjoner" },
-  { name: "config", about: ".claude/neo.config.json er gyldig, har miljøene, og ingen hemmelighet står med verdi" },
+  { name: "repo", about: "repo.yaml har typen, eieren, godkjenneren og forvalteren, og repoet har det typen sier" },
+  { name: "config", about: ".claude/neo.config.json har miljøet, adressen, org-en og MCP-serveren, og ingen hemmelighet" },
   { name: "hemmeligheter", about: "Ingen .env-fil eller nøkkel er committet" },
-  { name: "oppsett", about: "Hver fil i oppsett/ og snapshots/ er gyldig JSON, og ingen rå svar er committet" },
   { name: "godkjenner", about: "CODEOWNERS nevner en ekte godkjenner" },
   ...RESEARCH_CHECKS,
   ...STRUKTUR_CHECKS,
+  ...OPPSETT_CHECKS,
   ...HOS_KUNDEN_CHECKS,
-  { name: "versjon", about: "Malen og pluginen er på nyeste versjon" },
 ];
 
-export const UPSTREAM = {
-  mal: "https://raw.githubusercontent.com/Neo-Systems-AI/neo-forvaltning-mal/main/VERSION",
-  marked: "https://raw.githubusercontent.com/Neo-Systems-AI/neo-forvaltning/main/.claude-plugin/marketplace.json",
-};
-
-const walk = (dir) => (existsSync(dir) ? readdirSync(dir).flatMap((n) => (statSync(join(dir, n)).isDirectory() ? walk(join(dir, n)) : [join(dir, n)])) : []);
+export const TYPER = ["kunde", "standard"];
 
 // En nøkkel med et navn som dette er en hemmelighet, og skal stå som { "$env": … }, aldri med verdien.
 export const SECRET_KEY = /(passord|password|secret|hemmelig|token|apikey|api_key|privatekey|private_key|nokkel|nøkkel|^key$|keypem)/i;
 
-export function checkConfig(root) {
+// repo.yaml: typen, og eieren, godkjenneren og forvalteren. Et kunderepo har profil.yaml og virksomheten/; et
+// standardrepo har ingen av dem.
+export function checkRepo(root) {
   const f = [];
+  const file = "repo.yaml";
+  if (!existsSync(join(root, file))) return { type: undefined, findings: [{ check: "repo", file, message: "Mangler. repo.yaml sier hva repoet er, og hvem som eier og godkjenner" }] };
+  let y;
+  try {
+    y = parseYaml(readFileSync(join(root, file), "utf8")) ?? {};
+  } catch (e) {
+    return { type: undefined, findings: [{ check: "repo", file, message: `Kan ikke leses som YAML (${e.message})` }] };
+  }
+  if (!TYPER.includes(y.type)) f.push({ check: "repo", file, message: `type må være ${TYPER.join(" eller ")}` });
+  for (const k of ["eier", "godkjenner", "forvalter"]) {
+    if (!y[k] || typeof y[k] !== "object" || Array.isArray(y[k])) f.push({ check: "repo", file, message: `${k} mangler (navn${k === "eier" ? "" : " og github"})` });
+    else if (!String(y[k].navn ?? "").trim()) f.push({ check: "repo", level: "warn", file, message: `${k}.navn er ikke fylt ut` });
+  }
+  if (y.type === "kunde" && !existsSync(join(root, "profil.yaml"))) f.push({ check: "repo", file: "profil.yaml", message: "Et kunderepo har profil.yaml: løsningene kunden har tatt i bruk" });
+  if (y.type === "standard") for (const p of ["profil.yaml", "virksomheten"]) if (existsSync(join(root, p))) f.push({ check: "repo", file: p, message: `Et standardrepo har ikke ${p}: det hører til en kunde. Slett det` });
+  return { type: y.type, findings: f };
+}
+
+// Konfigfila pluginene leser. Miljøet, adressen til Neo, org-en og MCP-serveren; aldri en hemmelighet.
+export function readConfig(root) {
   const file = ".claude/neo.config.json";
-  if (!existsSync(join(root, file))) return [{ check: "config", file, message: "Mangler. Pluginene leser den; kjør /forvaltning:oppstart" }];
+  if (!existsSync(join(root, file))) return { findings: [{ check: "config", file, message: "Mangler. Pluginene leser den; kjør /config:set-up-repo" }] };
   let data;
   try {
     data = JSON.parse(readFileSync(join(root, file), "utf8"));
   } catch (e) {
-    return [{ check: "config", file, message: `Ikke gyldig JSON: ${e.message}` }];
+    return { findings: [{ check: "config", file, message: `Ikke gyldig JSON: ${e.message}` }] };
   }
+  const f = [];
   if (data.version !== 1) f.push({ check: "config", file, message: "version må være 1" });
   const envs = data.neo?.environments;
   if (!Array.isArray(envs) || !envs.length) f.push({ check: "config", file, message: "neo.environments mangler" });
-  for (const [env, v] of Object.entries(data.neo?.byEnv ?? {})) {
-    if (!v?.mcpServer) f.push({ check: "config", level: "warn", file, message: `MCP-serveren for ${env} er ikke satt` });
-    if (String(v?.url ?? "").includes("<")) f.push({ check: "config", level: "warn", file, message: `Adressen til Neo for ${env} er ikke fylt ut` });
+  const env = data.neo?.defaultEnv ?? envs?.[0];
+  if (Array.isArray(envs) && !envs.includes(env)) f.push({ check: "config", file, message: `neo.defaultEnv (${env}) er ikke i neo.environments` });
+  for (const [e, v] of Object.entries(data.neo?.byEnv ?? {})) {
+    if (!String(v?.url ?? "").startsWith("https://")) f.push({ check: "config", file, message: `Adressen til Neo i ${e} (neo.byEnv.${e}.url) mangler` });
+    if (!v?.mcpServer) f.push({ check: "config", level: "warn", file, message: `MCP-serveren for ${e} (neo.byEnv.${e}.mcpServer) er ikke satt` });
+    if (!String(v?.org ?? "").trim()) f.push({ check: "config", level: "warn", file, message: `Org-en i Neo for ${e} (neo.byEnv.${e}.org) er ikke fylt ut` });
   }
   const walkJson = (x, path) => {
     if (x && typeof x === "object" && !Array.isArray(x) && "$env" in x) return;
     if (x && typeof x === "object") for (const [k, v] of Object.entries(x)) {
       const p = path ? `${path}.${k}` : k;
-      if (SECRET_KEY.test(k) && typeof v === "string" && v && !/Dir$|File$/i.test(k)) f.push({ check: "config", file, message: `${p} står med verdi. En hemmelighet skal stå som {"$env": "…", "kilde": "…"}, og verdien ligge i kundens hvelv` });
+      if (SECRET_KEY.test(k) && typeof v === "string" && v && !/Dir$|File$/i.test(k)) f.push({ check: "config", file, message: `${p} står med verdi. Konfigfila har ingen hemmeligheter: referansen står der hemmeligheten brukes (integrasjoner/<system>/hemmeligheter.yaml, test/personaer/)` });
       walkJson(v, p);
     }
   };
   walkJson(data, "");
-  return f;
+  const url = data.neo?.byEnv?.[env]?.url;
+  return { env, schemaUrl: url ? `${String(url).replace(/\/+$/, "")}/api/config/schema` : undefined, findings: f };
 }
+
+export const checkConfig = (root) => readConfig(root).findings;
 
 // Filene git følger. I CI er det det som er committet; lokalt er en hentet .env.local ikke et funn før den legges til.
 export function tracked(root) {
@@ -75,55 +99,18 @@ export function tracked(root) {
 export const checkCommitted = (files) =>
   files.filter((p) => /(^|\/)(\.env(\.[^/]*)?|\.keys\/.*)$/.test(p) && !p.endsWith(".example")).map((p) => ({ check: "hemmeligheter", file: p, message: "Hemmeligheter er committet. Fjern fila fra git, og bytt verdiene i hvelvet: de er ikke hemmelige lenger" }));
 
-const newer = (a, b) => {
-  const [x, y] = [a, b].map((v) => String(v).split(".").map(Number));
-  for (let i = 0; i < 3; i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) > (y[i] ?? 0);
-  return false;
-};
-
-export async function run(root, { offline = false, fetchText = (u) => fetch(u).then((r) => (r.ok ? r.text() : Promise.reject(new Error(r.status)))) } = {}) {
+export async function run(root, { fetchJson } = {}) {
   const f = [];
-  const kf = join(root, "kunde.yaml");
-  let kunde = {};
-  if (!existsSync(kf)) f.push({ check: "kunde", file: "kunde.yaml", message: "Mangler. Kundefila sier hvem repoet forvalter for" });
-  else {
-    try {
-      kunde = parseYaml(readFileSync(kf, "utf8")) ?? {};
-    } catch (e) {
-      f.push({ check: "kunde", file: "kunde.yaml", message: `Kan ikke leses som YAML (${e.message})` });
-    }
-    for (const k of ["kunde", "godkjenner", "verktoy"]) if (!kunde[k]) f.push({ check: "kunde", file: "kunde.yaml", message: `«${k}» mangler` });
-  }
-  f.push(...checkConfig(root));
+  f.push(...checkRepo(root).findings);
+  const config = readConfig(root);
+  f.push(...config.findings);
   f.push(...checkCommitted(tracked(root)));
-  for (const file of [...walk(join(root, "oppsett")), ...walk(join(root, "snapshots"))]) {
-    const rel = relative(root, file);
-    if (/(^|\/)raw\//.test(rel)) f.push({ check: "oppsett", file: rel, message: "Et rått svar er committet. raw/ skal stå i .gitignore" });
-    else if (rel.endsWith(".json")) {
-      try {
-        JSON.parse(readFileSync(file, "utf8"));
-      } catch (e) {
-        f.push({ check: "oppsett", file: rel, message: `Ikke gyldig JSON: ${e.message}` });
-      }
-    }
-  }
   f.push(...checkResearch(root));
   f.push(...checkStruktur(root, { secretKey: SECRET_KEY }));
+  f.push(...(await checkOppsett(root, { schemaUrl: config.schemaUrl, env: config.env, ...(fetchJson ? { fetchJson } : {}) })));
   f.push(...checkListe(root));
   const co = join(root, ".github/CODEOWNERS");
   if (!existsSync(co) || /@ENDRE-MEG/.test(readFileSync(co, "utf8"))) f.push({ check: "godkjenner", level: "warn", file: ".github/CODEOWNERS", message: "Godkjenneren er ikke satt. Uten den kan hvem som helst med skrivetilgang godkjenne en endring" });
-  if (!offline) {
-    try {
-      const mal = (await fetchText(UPSTREAM.mal)).trim();
-      const have = kunde.verktoy?.mal ?? readFileSync(join(root, "VERSION"), "utf8").trim();
-      if (newer(mal, have)) f.push({ check: "versjon", level: "warn", file: "kunde.yaml", message: `Malen er ${mal}, repoet er laget fra ${have}. Se hva som er endret i neo-forvaltning-mal` });
-      const market = JSON.parse(await fetchText(UPSTREAM.marked));
-      const latest = market.plugins?.find((p) => p.name === "forvaltning")?.version;
-      if (latest && kunde.verktoy?.forvaltning && newer(latest, kunde.verktoy.forvaltning)) f.push({ check: "versjon", level: "warn", file: "kunde.yaml", message: `forvaltning er ${latest}, repoet sier ${kunde.verktoy.forvaltning}. Oppdater pluginen og versjonen i kunde.yaml` });
-    } catch (e) {
-      f.push({ check: "versjon", level: "warn", file: "kunde.yaml", message: `Kunne ikke lese nyeste versjon (${e.message})` });
-    }
-  }
   return f.map((x) => ({ level: "fail", ...x }));
 }
 
@@ -136,13 +123,13 @@ export function summary(findings) {
     return `| ${name} | ${about} | ${fails ? `❌ ${fails} å rette` : mine.length ? `⚠️ ${mine.length} å se på` : "✅ ok"} |`;
   });
   const details = findings.length ? `\n<details><summary>Funnene</summary>\n\n${findings.map((x) => `- ${x.level === "fail" ? "❌" : "⚠️"} \`${x.file}${x.line ? `:${x.line}` : ""}\`: ${x.message}`).join("\n")}\n</details>\n` : "";
-  return `## Kunderepoet\n\n| Sjekk | Hva den sjekker | Resultat |\n|---|---|---|\n${rows.join("\n")}\n${details}`;
+  return `## Repoet\n\n| Sjekk | Hva den sjekker | Resultat |\n|---|---|---|\n${rows.join("\n")}\n${details}`;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
   const root = args.includes("--root") ? args[args.indexOf("--root") + 1] : process.cwd();
-  const findings = await run(root, { offline: args.includes("--offline") });
+  const findings = await run(root);
   for (const x of findings) console.log(`${x.level === "fail" ? "✗" : "!"} ${x.file}${x.line ? `:${x.line}` : ""}: ${x.message}`);
   if (args.includes("--annotate")) for (const x of findings) console.log(`::${x.level === "fail" ? "error" : "warning"} file=${x.file}${x.line ? `,line=${x.line}` : ""},title=${x.check}::${esc(x.message)}`);
   if (args.includes("--summary")) {

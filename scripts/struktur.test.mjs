@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { checkStruktur, secretValues } from "./struktur.mjs";
+import { checkStruktur, isRef, secretValues } from "./struktur.mjs";
 import { SECRET_KEY } from "./check.mjs";
 
 const write = (root, path, text) => {
@@ -17,11 +17,11 @@ const repo = () => {
   write(root, "losninger/tilskudd/losning.yaml", LOSNING);
   write(root, "losninger/tilskudd/3-krav/03-forlop.md", KRAV);
   write(root, "losninger/klage/losning.yaml", "formal: Klager\neier: Kunden\nstatus: i-test\nintegrasjoner: []\nbygger-pa: { standard: klage, versjon: 1.2.0 }\n");
-  write(root, "integrasjoner/altinn/hemmeligheter.yaml", "maskinporten-nokkel:\n  $env: MASKINPORTEN_KEY\n  kilde: azure-keyvault:kv/mp-key\n");
+  write(root, "integrasjoner/altinn/hemmeligheter.yaml", "maskinporten-nokkel:\n  $env: MASKINPORTEN_KEY\n  kilde: azure-keyvault:kv/mp-key\n  fil: true\n");
   write(root, "integrasjoner/altinn/neo.yaml", "app: tilskudd\n");
   write(root, "integrasjoner/altinn/hos-kunden.md", "# Altinn\n\n## delegering Deleger tilgangen\n\n```yaml\nstatus: ikke-startet\nhvem: Hovedadministratoren\netter: [entra/sso]\n```\n");
   write(root, "integrasjoner/entra/hos-kunden.md", "## sso Sett opp SSO\n\n```yaml\nstatus: ferdig\nhvem: IT\n```\n");
-  write(root, "organisasjon/team-og-roller/personaer/saksbehandler.yaml", "navn: Sara Saksbehandler\nrolle: saksbehandler\nteam: [tilskudd]\nidentiteter:\n  altinn: { fnr: '01010112345' }\nhemmeligheter:\n  passord: { $env: SARA_PASSORD, kilde: azure-keyvault:kv/sara }\n");
+  write(root, "test/personaer/saksbehandler.yaml", "navn: Sara Saksbehandler\nrolle: saksbehandler\nteam: [tilskudd]\nidentiteter:\n  altinn: { fnr: '01010112345' }\nhemmeligheter:\n  passord: { $env: SARA_PASSORD, kilde: azure-keyvault:kv/sara }\n");
   write(root, "losninger/tilskudd/6-test/testcaser/fjordlys.yaml", "beskrivelse: En søknad innen fristen\npersona: saksbehandler\ninn:\n  belop: 100\nforventet:\n  krav: [frist]\n");
   write(root, "test/innboks.yaml", "beskrivelse: En e-post havner i riktig løsning\nlosninger: [tilskudd, klage]\nforventet:\n  krav: [frist]\n");
   return root;
@@ -44,9 +44,9 @@ test("losning.yaml mangler eller er ufullstendig", () => {
   write(root, "losninger/klage/losning.yaml", "formal: Klager\nstatus: ferdig\nintegrasjoner: [fiks]\nbygger-pa: { standard: klage }\n");
   const f = run(root).filter((x) => x.check === "losning");
   assert.deepEqual(f.map((x) => `${x.level ?? "fail"} ${x.message}`).sort(), [
-    "fail bygger-pa må være «egen», eller { standard: <navn>, versjon: <versjon> }",
+    "fail bygger-pa må være «egen», eller { standard: <navn>, versjon: <versjon> }, når løsningen er ute av utkast",
     "fail eier mangler",
-    "fail losning.yaml mangler. Den sier formålet, eieren, statusen, integrasjonene og hva løsningen bygger på",
+    "fail losning.yaml mangler. Lag en ny løsning med node scripts/ny-losning.mjs",
     "fail status må være utkast, i-test, i-bruk, avviklet",
     "warn Integrasjonen fiks står ikke i integrasjoner/",
   ]);
@@ -57,19 +57,19 @@ test("en hemmelighet med verdi stoppes, i hemmeligheter.yaml, neo.yaml, personae
   const root = repo();
   write(root, "integrasjoner/altinn/hemmeligheter.yaml", "maskinporten-nokkel: abc123\nannen:\n  $env: X\n");
   write(root, "integrasjoner/altinn/neo.yaml", "klient:\n  secret: abc\n");
-  write(root, "organisasjon/team-og-roller/personaer/leder.yaml", "navn: Lea\nrolle: leder\nhemmeligheter:\n  passord: hemmelig\n");
+  write(root, "test/personaer/leder.yaml", "navn: Lea\nrolle: leder\nhemmeligheter:\n  passord: hemmelig\n");
   write(root, "losninger/tilskudd/6-test/testcaser/b.yaml", "beskrivelse: b\nforventet: { krav: [frist] }\ninn: { password: x }\n");
   const f = run(root);
   assert.deepEqual(msgs(f, "integrasjon"), [
-    "annen må være { $env: <variabel>, kilde: <hvelv>/<navn> }, uten verdien",
-    "klient.secret står med verdi. En hemmelighet står som { $env: …, kilde: … }, og verdien ligger i kundens hvelv",
-    "maskinporten-nokkel må være { $env: <variabel>, kilde: <hvelv>/<navn> }, uten verdien",
+    "annen må være { $env: <variabel>, kilde: azure-keyvault:<hvelv>/<navn> } (og fil: true for en nøkkelfil), uten verdien",
+    "klient.secret står med verdi. En hemmelighet står som { $env: …, kilde: … }, og verdien ligger i hvelvet",
+    "maskinporten-nokkel må være { $env: <variabel>, kilde: azure-keyvault:<hvelv>/<navn> } (og fil: true for en nøkkelfil), uten verdien",
   ]);
   assert.deepEqual(msgs(f, "persona"), [
-    "hemmeligheter.passord må være { $env: <variabel>, kilde: <hvelv>/<navn> }, uten verdien",
-    "hemmeligheter.passord står med verdi. En hemmelighet står som { $env: …, kilde: … }, og verdien ligger i kundens hvelv",
+    "hemmeligheter.passord må være { $env: <variabel>, kilde: azure-keyvault:<hvelv>/<navn> } (og fil: true for en nøkkelfil), uten verdien",
+    "hemmeligheter.passord står med verdi. En hemmelighet står som { $env: …, kilde: … }, og verdien ligger i hvelvet",
   ]);
-  assert.deepEqual(msgs(f, "test"), ["inn.password står med verdi. En hemmelighet står som { $env: …, kilde: … }, og verdien ligger i kundens hvelv"]);
+  assert.deepEqual(msgs(f, "test"), ["inn.password står med verdi. En hemmelighet står som { $env: …, kilde: … }, og verdien ligger i hvelvet"]);
   assert.deepEqual(secretValues({ a: { $env: "A", kilde: "k" }, keyFile: ".keys/x.pem" }, SECRET_KEY), []);
   rmSync(root, { recursive: true });
 });
@@ -98,14 +98,29 @@ test("en testcase trenger beskrivelse og krav som finnes; en test i test/ går g
     "fail Kravet borte finnes ikke i noen 3-krav/",
     "fail beskrivelse mangler",
     "fail forventet mangler: det oppsettet skal gjøre med saken",
-    "warn Personaen ukjent står ikke i organisasjon/team-og-roller/personaer/",
+    "warn Personaen ukjent finnes ikke (test/personaer/ukjent.yaml)",
   ]);
   rmSync(root, { recursive: true });
+});
+
+test("en løsning i utkast trenger ikke bygger-pa ennå; ute av utkast gjør den det", () => {
+  const root = repo();
+  write(root, "losninger/ny/losning.yaml", "formal: Ny\neier: Kunden\nstatus: utkast\nintegrasjoner: []\nbygger-pa:\n");
+  assert.deepEqual(msgs(run(root), "losning"), []);
+  write(root, "losninger/ny/losning.yaml", "formal: Ny\neier: Kunden\nstatus: i-test\nintegrasjoner: []\nbygger-pa:\n");
+  assert.deepEqual(msgs(run(root), "losning"), ["bygger-pa må være «egen», eller { standard: <navn>, versjon: <versjon> }, når løsningen er ute av utkast"]);
+  rmSync(root, { recursive: true });
+});
+
+test("en referanse kan ha fil: true, men ikke andre felt eller en fil som ikke er sann eller usann", () => {
+  assert.ok(isRef({ $env: "A", kilde: "azure-keyvault:kv/a", fil: true }));
+  assert.ok(!isRef({ $env: "A", kilde: "azure-keyvault:kv/a", fil: "ja" }));
+  assert.ok(!isRef({ $env: "A", kilde: "azure-keyvault:kv/a", verdi: "x" }));
 });
 
 test("en YAML-fil som ikke kan leses, er et funn med linjen", () => {
   const root = repo();
   write(root, "losninger/klage/losning.yaml", "formal: [a\n");
-  assert.match(msgs(run(root), "losning")[0], /Kan ikke leses som YAML \(linje 1: lista mangler/);
+  assert.match(msgs(run(root), "losning")[0], /Kan ikke leses som YAML \(linje 2: /);
   rmSync(root, { recursive: true });
 });

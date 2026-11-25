@@ -1,14 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkCommitted, checkConfig, run } from "./check.mjs";
 import { execFileSync } from "node:child_process";
+import { checkCommitted, checkConfig, checkRepo, run } from "./check.mjs";
 
 const here = join(dirname(fileURLToPath(import.meta.url)), "..");
-// Malen slik en kunde får den: filene git følger, i et nytt repo med én commit.
+// Malen slik den kopieres inn i et nytt repo: filene git følger, i et nytt repo med én commit.
 const copy = () => {
   const root = mkdtempSync(join(tmpdir(), "mal-"));
   const files = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], { cwd: here, encoding: "utf8" }).split("\n").filter((f) => f && existsSync(join(here, f)));
@@ -19,42 +19,63 @@ const copy = () => {
   git("commit", "-q", "-m", "Initial commit");
   return root;
 };
+const write = (root, path, text) => {
+  mkdirSync(dirname(join(root, path)), { recursive: true });
+  writeFileSync(join(root, path), text);
+};
+const REPO = (type) => `type: ${type}\neier: { navn: Eier }\ngodkjenner: { navn: G, github: g }\nforvalter: { navn: F, github: f }\n`;
 
-test("en hemmelighet med verdi i config-fila stoppes; en referanse slipper", () => {
+test("malen slik den kopieres: bare gule funn, og Neo kalles ikke når det ikke er noen konfigfiler", async () => {
+  const fetchJson = () => assert.fail("skjemaet hentes bare når det er filer å validere");
+  const f = await run(copy(), { fetchJson });
+  assert.ok(f.length > 0);
+  assert.deepEqual(f.filter((x) => x.level !== "warn"), []);
+});
+
+test("konfigfila har ingen hemmeligheter, og sier adressen, org-en og MCP-serveren", () => {
   const root = copy();
-  writeFileSync(join(root, ".claude/neo.config.json"), JSON.stringify({
+  write(root, ".claude/neo.config.json", JSON.stringify({
     version: 1,
-    neo: { environments: ["sandkasse"], byEnv: { sandkasse: { mcpServer: "neo-sandkasse" } } },
-    fiks: { byEnv: { test: { passord: "hemmelig", svarinnPassord: { $env: "X", kilde: "azure-keyvault:kv/x" }, nokkelFile: ".keys/x.pem" } } },
+    neo: { environments: ["development"], defaultEnv: "development", byEnv: { development: { mcpServer: "neo-development", org: "", token: "hemmelig" } } },
   }));
-  const fails = checkConfig(root).filter((x) => x.level !== "warn");
-  assert.equal(fails.length, 1);
-  assert.match(fails[0].message, /fiks\.byEnv\.test\.passord står med verdi/);
+  const f = checkConfig(root).map((x) => `${x.level ?? "fail"} ${x.message}`).sort();
+  assert.equal(f.length, 3);
+  assert.match(f[0], /^fail Adressen til Neo i development/);
+  assert.match(f[1], /^fail neo\.byEnv\.development\.token står med verdi/);
+  assert.match(f[2], /^warn Org-en i Neo for development/);
+  rmSync(root, { recursive: true });
 });
 
 test("en committet .env.local eller nøkkel stoppes", () => {
-  const found = checkCommitted([".env.local", ".keys/mp.pem", "kunde.yaml", ".env.example"]).map((x) => x.file);
+  const found = checkCommitted([".env.local", ".keys/mp.pem", "repo.yaml", ".env.example"]).map((x) => x.file);
   assert.deepEqual(found, [".env.local", ".keys/mp.pem"]);
 });
 
-test("malen slik en kunde får den: bare gule funn", async () => {
-  const f = await run(copy(), { offline: true });
-  assert.ok(f.length > 0);
-  assert.ok(f.every((x) => x.level === "warn"));
+test("repo.yaml: typen, og repoet har det typen sier", () => {
+  const root = mkdtempSync(join(tmpdir(), "repo-"));
+  const fails = () => checkRepo(root).findings.filter((x) => (x.level ?? "fail") === "fail").map((x) => `${x.file} ${x.message}`).sort();
+  assert.deepEqual(fails(), ["repo.yaml Mangler. repo.yaml sier hva repoet er, og hvem som eier og godkjenner"]);
+  write(root, "repo.yaml", "type: partner\neier: { navn: E }\n");
+  assert.deepEqual(fails(), ["repo.yaml forvalter mangler (navn og github)", "repo.yaml godkjenner mangler (navn og github)", "repo.yaml type må være kunde eller standard"]);
+  write(root, "repo.yaml", REPO("kunde"));
+  assert.deepEqual(fails(), ["profil.yaml Et kunderepo har profil.yaml: løsningene kunden har tatt i bruk"]);
+  write(root, "profil.yaml", "");
+  assert.deepEqual(fails(), []);
+  write(root, "repo.yaml", REPO("standard"));
+  write(root, "virksomheten/kilder/kilder.md", "");
+  assert.deepEqual(fails(), [
+    "profil.yaml Et standardrepo har ikke profil.yaml: det hører til en kunde. Slett det",
+    "virksomheten Et standardrepo har ikke virksomheten: det hører til en kunde. Slett det",
+  ]);
+  rmSync(root, { recursive: true });
 });
 
-test("rå svar og ugyldig JSON stoppes", async () => {
+test("et standardrepo laget fra malen, uten profil.yaml og virksomheten/, har bare gule funn", async () => {
   const root = copy();
-  mkdirSync(join(root, "snapshots/sandkasse/raw"), { recursive: true });
-  writeFileSync(join(root, "snapshots/sandkasse/raw/x.json"), "{}");
-  writeFileSync(join(root, "oppsett/list_case_types.json"), "{");
-  const fails = (await run(root, { offline: true })).filter((x) => x.level === "fail").map((x) => x.check);
-  assert.deepEqual(fails, ["oppsett", "oppsett"]);
-});
-
-test("en nyere versjon gir et gult funn", async () => {
-  const fetchText = async (u) => (u.endsWith("VERSION") ? "0.4.0\n" : JSON.stringify({ plugins: [{ name: "forvaltning", version: "0.1.0" }] }));
-  const f = (await run(copy(), { fetchText })).filter((x) => x.check === "versjon");
-  assert.equal(f.length, 1);
-  assert.match(f[0].message, /Malen er 0.4.0/);
+  write(root, "repo.yaml", REPO("standard"));
+  rmSync(join(root, "profil.yaml"));
+  rmSync(join(root, "virksomheten"), { recursive: true });
+  const f = await run(root);
+  assert.deepEqual(f.filter((x) => x.level !== "warn"), []);
+  rmSync(root, { recursive: true });
 });

@@ -1,11 +1,14 @@
 {
   "version": 1,
   "neo": {
-    "environments": ["sandkasse", "produksjon"],
-    "defaultEnv": "sandkasse",
+    "environments": ["development"],
+    "defaultEnv": "development",
     "byEnv": {
-      "sandkasse": { "mcpServer": "neo-sandkasse", "url": "https://<neo-adresse>" },
-      "produksjon": { "mcpServer": "neo-produksjon", "url": "https://<neo-adresse>" }
+      "development": {
+        "url": "https://api-server-development.nicebay-f3a7b126.norwayeast.azurecontainerapps.io",
+        "mcpServer": "neo-development",
+        "org": ""
+      }
     }
   }
 }

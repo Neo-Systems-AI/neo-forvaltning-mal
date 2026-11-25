@@ -20,7 +20,7 @@ const repo = () => {
 test("lista har det som kan gjøres nå, det som venter, og hvor mye som er ferdig, med lenker", () => {
   const root = repo();
   const md = render(root);
-  assert.match(md, /## Nå\n\n\| System \| Oppgaven \| Status \| Hvem \| Oppskriften \|\n\|---\|---\|---\|---\|---\|\n\| entra \| \[Sett opp SSO\]\(entra\/hos-kunden.md#sso-sett-opp-sso\) \| i-gang \| IT \| \[entra\]\(https:\/\/github.com\/eier\/plugins\/blob\/main\/docs\/integrasjoner\/entra.md\) \|\n\n/);
+  assert.match(md, /## Nå\n\n\| System \| Oppgaven \| Status \| Hvem \| Oppskriften \|\n\|---\|---\|---\|---\|---\|\n\| entra \| \[Sett opp SSO\]\(entra\/hos-kunden.md#sso-sett-opp-sso\) \| i-gang \| IT \| \[entra\]\(https:\/\/github.com\/eier\/plugins\/blob\/main\/docs\/README.md\) \|\n\n/);
   assert.match(md, /## Senere\n\n.*\n.*\n\| altinn \| \[Deleger tilgangen \\\| rollen\]\(altinn\/hos-kunden.md#delegering-deleger-tilgangen--rollen\) \| ikke-startet \| Hovedadministratoren \| entra\/sso \| \[altinn\]/);
   assert.match(md, /1 av 3 oppgaver er ferdige/);
   rmSync(root, { recursive: true });

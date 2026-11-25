@@ -1,6 +1,5 @@
-snapshots/*/raw/
-reports/*/raw/
-# Hemmelighetene fra kundens hvelv, hentet lokalt av et menneske (/forvaltning:hemmeligheter). Committes aldri.
+node_modules/
+# Hemmelighetene fra hvelvet, hentet lokalt av et menneske (/config:show-secrets). Committes aldri.
 .env
 .env.*
 .keys/

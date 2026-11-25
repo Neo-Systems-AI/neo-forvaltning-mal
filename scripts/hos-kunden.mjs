@@ -11,12 +11,13 @@ import { tasks } from "./struktur.mjs";
 export const LISTE = "integrasjoner/README.md";
 export const HOS_KUNDEN_CHECKS = [{ name: "liste", about: "Lista over det kunden må gjøre, stemmer med oppgavene i integrasjonene" }];
 
-// Oppskriftene står i docs/integrasjoner/ i repoet til markedsplassen pluginene kommer fra (.claude/settings.json).
+// Oppskriftene står i docs/ i pluginen til hvert system, i repoet til markedsplassen pluginene kommer fra
+// (.claude/settings.json). docs/README.md i roten av det repoet er inngangen, med lenker til dem.
 export function recipeBase(root) {
   const file = join(root, ".claude/settings.json");
   const repo = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")).extraKnownMarketplaces?.["neo-forvaltning"]?.source?.repo : undefined;
   if (!repo) throw new Error(".claude/settings.json sier ikke hvilket repo markedsplassen neo-forvaltning er i, så lista kan ikke lenke til oppskriftene");
-  return `https://github.com/${repo}/blob/main/docs/integrasjoner`;
+  return `https://github.com/${repo}/blob/main/docs/README.md`;
 }
 
 // Ankeret GitHub lager for en overskrift.
@@ -31,7 +32,7 @@ export function render(root) {
   const waiting = (t) => t.etter.filter((e) => status.get(e) !== "ferdig");
   const now = open.filter((t) => !waiting(t).length);
   const later = open.filter((t) => waiting(t).length);
-  const row = (t, extra = []) => `| ${t.system} | [${cell(t.title || t.id)}](${t.system}/hos-kunden.md#${anchor(`${t.id} ${t.title}`)}) | ${cell(t.fields.status)} | ${cell(t.fields.hvem)} | ${extra.map((x) => `${cell(x)} | `).join("")}[${t.system}](${base}/${t.system}.md) |`;
+  const row = (t, extra = []) => `| ${t.system} | [${cell(t.title || t.id)}](${t.system}/hos-kunden.md#${anchor(`${t.id} ${t.title}`)}) | ${cell(t.fields.status)} | ${cell(t.fields.hvem)} | ${extra.map((x) => `${cell(x)} | `).join("")}[${t.system}](${base}) |`;
   const out = [
     "<!-- Generert av scripts/hos-kunden.mjs fra integrasjoner/*/hos-kunden.md. Skrives ikke for hånd. -->",
     "",
