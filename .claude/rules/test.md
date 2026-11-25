@@ -14,12 +14,13 @@ Testene prøver oppsettet i Neo slik en saksbehandler møter det, med syntetiske
 | Testplanen: hvilke testcaser som kjøres, i hvilken rekkefølge, av hvilken persona | `losninger/<losning>/6-test/testplan.md` |
 | Funnene fra én runde i UI, med observasjonene ordrett | `losninger/<losning>/6-test/runder/<nn>-<ÅÅÅÅ-MM-DD>.md` |
 | Testene som går gjennom flere løsninger | `test/<navn>.yaml` |
+| Testbrukerne, felles for alle løsningene | `test/personaer/<navn>.yaml` ([personaene](personaer.md)) |
 
 ## En testcase
 
 ```yaml
 beskrivelse: En søknad som kommer inn etter fristen, og avvises
-persona: saksbehandler        # fila i organisasjon/team-og-roller/personaer/, uten .yaml
+persona: saksbehandler        # test/personaer/saksbehandler.yaml
 inn:                          # saken slik den kommer inn: skjemaet, e-posten, vedleggene
   mottatt: 2027-03-02
 forventet:
@@ -35,4 +36,4 @@ forventet:
 - **Passord og nøkler** står aldri i en testcase. Personaen har referansene.
 
 `check` sjekker at hver testcase har en beskrivelse og kravene den prøver, og at kravene finnes. En persona som ikke
-finnes, gir et gult funn: et repo for standardløsninger har ingen personaer.
+finnes i `test/personaer/`, gir et gult funn.

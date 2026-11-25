@@ -18,7 +18,6 @@ Et krav er et item: en overskrift med id og tittel, en yaml-blokk rett under, og
 flyt: deterministisk
 hvorfor: Fristen er et tidspunkt i utlysningen; mottakstidspunktet står på e-posten.
 kilde: [K1, 2-forstaelse/03-forlop.md#søknad-og-mottak]
-blir:
 ```
 
 Det som trengs for å forstå kravet, og det som er uavklart.
@@ -33,8 +32,8 @@ Det som trengs for å forstå kravet, og det som er uavklart.
 - **`kilde`** er id-er i registeret til løsningen, eller stier til forståelsen med anker. En sti er relativ til
   løsningen, som en lenke i markdown: `2-forstaelse/03-forlop.md#søknad-og-mottak`, eller
   `../../virksomheten/forstaelse/04-roller-og-tilgang.md` for det som gjelder hele kunden.
-- **`blir`** fylles ut når kravet kobles til oppsettet: konfigobjektet kravet blir, eller et ønske til produktet når det
-  er sjekket at Neo ikke har det. Kravene antar ikke hva produktet har.
+- **Hvilken fil i oppsettet som oppfyller kravet,** står i `5-oppsett/spor.yaml`, ikke i kravet ([oppsettet](oppsett.md)).
+  Kravene antar ikke hva produktet har.
 - **Et krav fra hjemmelen tas aldri bort.** Oppsettet kan oppfylle det på en annen måte.
 
 `check` sjekker at hvert krav har `flyt`, `hvorfor` og en kilde som finnes, og at ingen id er brukt to ganger.

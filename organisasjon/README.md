@@ -1,19 +1,11 @@
 # Organisasjonen
 
-Konfigen i Neo som gjelder hele org-en, utenfor løsningene. Det som gjelder én sakstype, står i løsningen.
+Det som er felles for hele org-en i Neo, utenfor løsningene, med de samme to stegene som en løsning:
 
-| Mappe | Hva |
-|---|---|
-| `ki/` | KI-bryterne, de tillatte modellene, modellpolicyen og innstillingene for metadata. KI-reglene, verktøyene og modellen for én sakstype står i løsningen |
-| `team-og-roller/` | Teamene, jobbrollene, gruppene fra kundens identitetssystem, og personaene i `personaer/` |
-| `tilgang/` | Tilgangen på tvers av løsningene |
-| `innboks/` | Smarttaggene og rutingen. Posten kommer før noen vet hvilken løsning den hører til |
-| `skriveregler/` | Reglene agenten i Neo skriver brev og sakstekster etter, når de er felles |
-| `felles/` | Felt, statussett og maler flere løsninger bruker |
-| `innsikt/` | Dashbord og rapporter på tvers |
-| `miljoer/` | Sandkassen og det som kobles per miljø (formen kommer) |
+| Mappe | Hva | Formen |
+|---|---|---|
+| `4-design/` | Valgene som gjelder på tvers: KI, team og roller, tilgang, skrivereglene, innsikten | Tilstand, som `4-design/` i en løsning ([løsningene](../.claude/rules/losninger.md)) |
+| `5-oppsett/` | Konfigen flere løsninger bruker (felt, statussett, innboks-tagger), i Neos format | [oppsettet](../.claude/rules/oppsett.md) |
 
-Formen på konfigen kommer. Til den er satt, står mappene tomme, og designet i løsningene sier hva som skal hit. Formen
-på personaene står i [`.claude/rules/personaer.md`](../.claude/rules/personaer.md).
-
-Et repo for standardløsninger har ikke denne mappa.
+Det som gjelder én sakstype, også KI-reglene, agentens verktøy og modell for den, står i løsningen. Team og roller er
+ikke konfig: designet sier hvilke som trengs, og et menneske setter dem opp i Neo.
