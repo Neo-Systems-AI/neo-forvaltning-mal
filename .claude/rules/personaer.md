@@ -18,14 +18,14 @@ identiteter:
   altinn: { fnr: "<testbruker i tt02>" }
   idporten: { fnr: "<syntetisk person fra Tenor>" }
 hemmeligheter:
-  passord: { kilde: azure-keyvault:kv-forvalter-test/sara-passord }
-  sertifikat: { kilde: azure-keyvault:kv-forvalter-test/sara-sertifikat, fil: true }
+  passord: { $env: SARA_PASSORD, kilde: azure-keyvault:kv-forvalter-test/sara-passord }
+  sertifikat: { $env: SARA_SERTIFIKAT, kilde: azure-keyvault:kv-forvalter-test/sara-sertifikat, fil: true }
 ```
 
 - **Identitetene er testidentiteter:** testbrukere i Altinn (tt02), syntetiske personer fra Tenor, test-
   organisasjonsnumre og testkontoer. Aldri en ekte person.
 - **Passord og nøkler** står under `hemmeligheter`, som referanser til hvelvet til den som eier testidentiteten:
-  `{ kilde: azure-keyvault:<hvelv>/<navn> }`, og `fil: true` når verdien er en fil. Verdien står aldri i repoet.
+  `{ $env: <NAVN>, kilde: azure-keyvault:<hvelv>/<navn> }`, og `fil: true` når verdien er en fil. Verdien står aldri i repoet.
 - **Rollen og teamet** settes opp i Neo av et menneske. De er miljø, ikke konfig.
 
 Sjekken stopper en persona uten `navn` eller `rolle`, en referanse i en annen form, og en hemmelighet med verdi.

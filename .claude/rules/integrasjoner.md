@@ -42,23 +42,24 @@ Det som er spesielt for denne kunden. Fremgangsmåten står i oppskriften.
 ## Hemmelighetene
 
 Referansene står ved siden av oppsettet av systemet i `.claude/neo.config.json`, under `<system>.hemmeligheter`: et
-kart fra navnet pluginen ser etter, til hvor verdien ligger i Azure Key Vault, i hvelvet til den som eier den (kundens
-for kundens systemer). Verdien står aldri i repoet. README-en til pluginen for systemet sier hvilke navn den trenger.
+kart fra navnet pluginen ser etter, til navnet verdien har lokalt og hvor den ligger, i hvelvet til den som eier den
+(kundens for kundens systemer). Verdien står aldri i repoet. README-en til pluginen for systemet sier hvilke navn den trenger.
 
 ```json
 "maskinporten": {
   "miljo": "test",
   "klienter": { "fiks": { "clientId": "<klient-ID fra selvbetjeningen>", "scopes": ["ks:fiks"] } },
   "hemmeligheter": {
-    "fiks-nokkel": { "kilde": "azure-keyvault:kv-kunde/maskinporten-fiks-nokkel", "fil": true }
+    "fiks-nokkel": { "$env": "MASKINPORTEN_FIKS_NOKKEL", "kilde": "azure-keyvault:kv-kunde/maskinporten-fiks-nokkel", "fil": true }
   }
 }
 ```
 
-- **Formen er `{ "kilde": "azure-keyvault:<hvelv>/<navn>" }`,** og `"fil": true` når verdien er en fil, for eksempel en
-  nøkkel (PEM). Ingen andre felt, og ingen referanser andre steder i fila.
-- **Skriptene i pluginene henter verdien fra hvelvet ved hvert kall,** med personens egen innlogging. Ingen verdi
-  lagres på disk.
+- **Formen er `{ "$env": "<NAVN>", "kilde": "azure-keyvault:<hvelv>/<navn>" }`,** og `"fil": true` når verdien er en
+  fil, for eksempel en nøkkel (PEM). Ingen andre felt. Maskinklienten mot Neo har sin under
+  `neo.byEnv.sandkasse.apiClient.clientSecret`.
+- **Et menneske henter verdiene** til `.env.local` og `.keys/` (`/forvaltning:hemmeligheter`), og skriptene leser dem
+  derfra. I en jobb i GitHub settes den samme variabelen fra jobbens hemmeligheter. Ingenting av det committes.
 - **Klienter, sertifikater, kontoer og delegeringer** hører til kunden, og lages i kundens navn.
 
 Sjekken stopper en oppgave uten gyldig `status` eller `hvem`, en id som er brukt før, en `etter` som ikke finnes, en

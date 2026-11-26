@@ -10,7 +10,13 @@ før noe skrives til Neo. `type` i `kunde.yaml` sier hva slags repo det er:
 ## Kom i gang
 
 Start Claude Code og kjør `/forvaltning:oppstart`. Den lager repoet fra malen, fyller ut `kunde.yaml`,
-`.claude/neo.config.json` (sandkassen og produksjonen) og `CODEOWNERS`, skrur på pluginene og kobler deg til Neo.
+`.claude/neo.config.json` (sandkassen, produksjonen og maskinklienten) og `CODEOWNERS`, og skrur på pluginene.
+
+- **Før oppstarten:** org-admin i Neo har laget en maskinklient i sandkassen (*API-klienter → Ny API-klient*, slaget
+  «Maskin») med scopene for konfig, og lagt hemmeligheten i kundens hvelv. Snapshot, plan og gjennomføring går med
+  den, ikke gjennom MCP.
+- **Etter oppstarten:** et menneske henter hemmelighetene, også maskinklientens, til `.env.local` og `.keys/`
+  (`/forvaltning:hemmeligheter`). Ingen av dem committes.
 
 Pluginene `forvaltning` og `solution` kommer fra markedsplassen
 [`neo-forvaltning`](https://github.com/Neo-Systems-AI/neo-forvaltning). I en klone av malen spør Claude Code om dem
@@ -31,13 +37,13 @@ snapshots/<miljø>/            det som kjører i sandkassen og produksjonen, skr
 reports/                      planene fra Neo, skrevet av forvaltning
 integrasjoner/<system>/       hos-kunden.md, og det systemet trenger fra oss
 test/personaer/               testbrukerne, felles for alle løsningene
-.claude/neo.config.json       miljøene i Neo, og én del per system med referansene til hvelvet. Ingen hemmeligheter
+.claude/neo.config.json       miljøene i Neo, maskinklienten, og én del per system. Hemmelighetene bare som referanser
 .claude/rules/                formen på hver mappe, slik sjekken leser den
 ```
 
 En mappe finnes når det er noe i den; malen har bare filene som gjelder hele repoet, og `oppsett/`, `snapshots/` og
 `reports/`. Konfigen i `oppsett/` er Neos eget format: Neo skriver filene ved et snapshot, og vurderer dem i planen.
-Hemmelighetene ligger i Azure Key Vault; repoet har bare referansene.
+Hemmelighetene ligger i kundens hvelv; repoet har bare referansene.
 
 ## Sjekken
 

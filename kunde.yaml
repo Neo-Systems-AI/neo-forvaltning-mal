@@ -1,4 +1,4 @@
-# Kundefila: hva repoet er, hvem det er for, og hvem som godkjenner. Det tekniske (miljøene, MCP-serverne og
+# Kundefila: hva repoet er, hvem det er for, og hvem som godkjenner. Det tekniske (miljøene, maskinklienten og
 # systemene) står i .claude/neo.config.json. /forvaltning:oppstart fyller ut begge.
 
 # kunde: oppsettet for én kommune eller virksomhet. standard: standardløsninger som en partner eller Neo eier.
