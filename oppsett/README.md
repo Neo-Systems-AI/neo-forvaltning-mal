@@ -17,6 +17,12 @@ det som «ikke styrt», og gjennomføringen rører det ikke.
 | `workflows/` | En flyt | `name` |
 | `relation-views/` | En relasjonsvisning | sakstypene, retningen og `name` |
 | `case-wizards/` | Veiviseren for en sakstype | sakstypen |
+| `instructions/` | En behandlingsregel | `name` |
+| `document-templates/` | En dokumentmal | `name` |
+| `case-run-instructions/` | En saksdatainstruks | `name` |
+| `case-data-templates/` | En saksdatamal | `name` |
+| `inbox-tags/` | En tagg i innboksen | `name` |
+| `flow-event-types/` | En hendelsestype for flytene | `name` |
 
 Mappene, nøklene og rekkefølgen står i Neo sitt manifest (`<adresse>/api/config/schema`); tabellen over er det det
 sier i dag. Hver fil har ett objekt:
@@ -38,5 +44,6 @@ Reglene, kort (Neo sjekker dem i planen):
 - **Filnavnet er nøkkelen.** Får et objekt nytt navn i fila, må fila også få nytt navn.
 - **Det fila fjerner, blir stående i Neo.** Planen viser det som «blir stående», og det fjernes for hånd.
 
-Det Neo ikke skriver som fil ennå (behandlingsregler, maler, tagger og flere), står i `ikke-med.md` i snapshotet og
+Det Neo ikke skriver som fil ennå (for eksempel skjemaer, lagrede visninger, saksnummeret og Innsikt), står i
+`ikke-med.md` i snapshotet og
 beskrives for hånd i [`manuelt/`](manuelt/README.md).
