@@ -4,7 +4,14 @@
     "environments": ["sandkasse", "produksjon"],
     "defaultEnv": "sandkasse",
     "byEnv": {
-      "sandkasse": { "mcpServer": "neo-sandkasse", "url": "https://<neo-adresse>" },
+      "sandkasse": {
+        "mcpServer": "neo-sandkasse",
+        "url": "https://<neo-adresse>",
+        "apiClient": {
+          "clientId": "<klient-id for maskinklienten i sandkassen>",
+          "clientSecret": { "$env": "NEO_SANDKASSE_KLIENT_HEMMELIGHET", "kilde": "<hvelvet og navnet>" }
+        }
+      },
       "produksjon": { "mcpServer": "neo-produksjon", "url": "https://<neo-adresse>" }
     }
   }

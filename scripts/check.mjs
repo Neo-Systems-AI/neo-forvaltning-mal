@@ -61,6 +61,7 @@ export function checkConfig(root) {
   for (const [env, v] of Object.entries(data.neo?.byEnv ?? {})) {
     if (!v?.mcpServer) f.push({ check: "config", level: "warn", file, message: `MCP-serveren for ${env} er ikke satt` });
     if (String(v?.url ?? "").includes("<")) f.push({ check: "config", level: "warn", file, message: `Adressen til Neo for ${env} er ikke fylt ut` });
+    if (v?.apiClient !== undefined && String(v.apiClient?.clientId ?? "").includes("<")) f.push({ check: "config", level: "warn", file, message: `Maskinklienten for ${env} er ikke fylt ut (neo.byEnv.${env}.apiClient). Skriptene i forvaltning trenger den` });
   }
   const walkJson = (x, path) => {
     if (x && typeof x === "object" && !Array.isArray(x) && "$env" in x) return;
