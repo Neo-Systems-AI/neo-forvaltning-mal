@@ -1,31 +1,31 @@
 ---
 paths:
-  - "organisasjon/team-og-roller/**"
+  - "test/personaer/**"
 ---
 
 # Personaene
 
-En persona er en testbruker: en person med rolle og team i Neo, og med identitetene den trenger i systemene rundt.
-Samme persona brukes i alle løsningene. Én fil per persona, i `organisasjon/team-og-roller/personaer/<navn>.yaml`, og
-testcasene viser til den med navnet på fila.
+En persona er en testbruker: en person med rolle og team i Neo, og identitetene den trenger i systemene rundt. Samme
+persona brukes i alle løsningene, én fil per persona.
 
 ```yaml
+# test/personaer/saksbehandler.yaml: testcasene skriver «persona: saksbehandler»
 navn: Sara Saksbehandler
 rolle: saksbehandler                 # jobbrollen i Neo
-team: [tilskudd]
+team: [parkering]
 identiteter:
-  neo: { epost: sara@<testdomene> }
-  entra: { bruker: sara@<testdomene> }
+  neo: { epost: sara@test.example }
   altinn: { fnr: "<testbruker i tt02>" }
   idporten: { fnr: "<syntetisk person fra Tenor>" }
-  organisasjon: { orgnr: "<test-organisasjonsnummer>" }
-  arkiv: { bruker: sara }
 hemmeligheter:
-  passord: { $env: SARA_PASSORD, kilde: azure-keyvault:<hvelv>/<navn> }
+  passord: { kilde: azure-keyvault:kv-forvalter-test/sara-passord }
+  sertifikat: { kilde: azure-keyvault:kv-forvalter-test/sara-sertifikat, fil: true }
 ```
 
-- **Identitetene er testidentiteter:** testbrukere i Altinn (tt02), syntetiske personer fra Tenor i ID-porten,
-  test-organisasjonsnumre og testkontoer i arkivet og Entra. Aldri en ekte person.
-- **Passord og nøkler** står under `hemmeligheter`, som referanser til hvelvet.
+- **Identitetene er testidentiteter:** testbrukere i Altinn (tt02), syntetiske personer fra Tenor, test-
+  organisasjonsnumre og testkontoer. Aldri en ekte person.
+- **Passord og nøkler** står under `hemmeligheter`, som referanser til hvelvet til den som eier testidentiteten:
+  `{ kilde: azure-keyvault:<hvelv>/<navn> }`, og `fil: true` når verdien er en fil. Verdien står aldri i repoet.
+- **Rollen og teamet** settes opp i Neo av et menneske. De er miljø, ikke konfig.
 
-`check` sjekker at hver persona har navn og rolle, og at ingen hemmelighet står med verdi.
+Sjekken stopper en persona uten `navn` eller `rolle`, en referanse i en annen form, og en hemmelighet med verdi.

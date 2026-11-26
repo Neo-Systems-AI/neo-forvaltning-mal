@@ -1,67 +1,60 @@
 # neo-forvaltning-mal
 
-Malen for et repo med oppsettet i [Neo](https://neosystems.ai) for én kommune eller virksomhet: løsningene, konfigen
-for hele org-en og integrasjonene, som filer, med researchen og kravene de bygger på. Endringene går gjennom en PR, og
-kunden godkjenner dem før de tas i bruk. Malen gir også et repo for standardløsninger, som en partner eller Neo eier.
+Malen for et repo med oppsettet i [Neo](https://neosystems.ai) som filer: løsningene, det som er felles for org-en,
+og integrasjonene, med kildene og kravene de bygger på. Endringene går gjennom en PR, og godkjenneren godkjenner dem
+før noe skrives til Neo. `type` i `kunde.yaml` sier hva slags repo det er:
 
-Repoet ditt er ditt. Malen har strukturen, reglene og sjekkene. Skillene som researcher, skriver krav, designer, bygger
-og tester, ligger i pluginene i [`neo-forvaltning`](https://github.com/Neo-Systems-AI/neo-forvaltning), sammen med
-oppskriftene for integrasjonene og mønstrene for god konfig. Løpet fra en idé til en løsning i bruk står i README-en til
-pluginen `solution` der.
-
-**Et repo er én måte å forvalte oppsettet på.** Oppsettet kan også forvaltes rett i Neo. Repoet gir oppsettet som filer
-med historikk, en endring kunden godkjenner i en PR før noe endres i Neo, og sjekker som holder formen. Malen bruker
-GitHub fordi det er git-verktøyet vi kobler til i dag.
+- **`kunde`:** oppsettet for én kommune eller virksomhet.
+- **`standard`:** standardløsninger som en partner eller Neo eier, og som kundene tar i bruk.
 
 ## Kom i gang
 
-1. **Lag repoet:** «Use this template» → velg **din egen organisasjon** og **Private**. Et repo laget fra en mal er
-   ikke en fork, så det kan være privat.
-2. **Sett regler for `main`** (Settings → Rules → Rulesets): krev PR, krev at `check` er grønn, krev godkjenning fra
-   CODEOWNERS, og tillat bare merge commit. På et privat repo krever dette GitHub Team eller høyere.
-3. **Start Claude Code i repoet**, godta markedsplassen `neo-forvaltning`, og kjør `/forvaltning:oppstart`. Den
-   intervjuer, fyller ut `kunde.yaml`, `.claude/neo.config.json` og `CODEOWNERS`, og kobler til Neo. Org-admin i Neo må
-   først ha laget en kobling for Claude Code (*API-klienter → Koble til Claude*, slaget «Claude Code»), én i sandkassen
-   og én i produksjonen.
-4. **Hent hemmelighetene** til systemene du skal kalle (se under), og logg inn i Neo med `/mcp`.
+Start Claude Code og kjør `/forvaltning:oppstart`. Den lager repoet fra malen, fyller ut `kunde.yaml`,
+`.claude/neo.config.json` (sandkassen og produksjonen) og `CODEOWNERS`, skrur på pluginene og kobler deg til Neo.
 
-Et repo for standardløsninger trenger ikke `organisasjon/` og `profil.yaml`; slett dem i den første PR-en.
+Pluginene `forvaltning` og `solution` kommer fra markedsplassen
+[`neo-forvaltning`](https://github.com/Neo-Systems-AI/neo-forvaltning). I en klone av malen spør Claude Code om dem
+(`.claude/settings.json`); ellers: `/plugin marketplace add Neo-Systems-AI/neo-forvaltning` og
+`/plugin install forvaltning@neo-forvaltning`. Løypa fra en idé til en løsning i bruk står i README-en til `solution`,
+og veien inn og ut av Neo i README-en til `forvaltning`.
 
-## Strukturen
+## Hvor hva står
 
-Repoet speiler modellen i Neo: løsningene (pakker av konfig, én per sakstype eller prosess), profilen (løsningene
-kunden har tatt i bruk) og konfigen for hele org-en. Hva som står hvor, står i [`CLAUDE.md`](./CLAUDE.md), og formen på
-hver mappe i [`.claude/rules/`](./.claude/rules/).
-
-Det kunden selv må gjøre for at Neo skal kobles til systemene, står samlet i
-[`integrasjoner/README.md`](./integrasjoner/README.md). Lista lages fra statusen i hver integrasjon, og skrives ikke for
-hånd.
-
-## Hemmelighetene
-
-**Kundens hemmeligheter er kundens:** Maskinporten-klientene, nøklene, virksomhetssertifikatet og passordene ligger i
-kundens hvelv. Repoet sier bare hvor hver av dem ligger (`{"$env": "…", "kilde": "azure-keyvault:<hvelv>/<navn>"}`),
-aldri verdien. Et menneske henter dem lokalt med sin egen innlogging (`/forvaltning:hemmeligheter`) til `.env.local`
-og `.keys/`, som aldri committes. Når noen forvalter for kunden, bruker de kundens hvelv med en tilgang kunden har gitt
-og kan trekke tilbake.
-
-## Sjekkene
-
-`check` kjører på hver PR: testene av skriptene, og `node scripts/check.mjs`. Den sjekker kundefila og konfigfila, at
-ingen hemmelighet er committet, at kildene er uendret og at påstandene og kravene har kilde, at løsningene,
-integrasjonene, personaene og testcasene har formen sin, og at lista over det kunden må gjøre er oppdatert. Gitleaks
-leser endringen etter hemmeligheter. Rødt stopper PR-en; gult sier fra uten å stoppe.
-
-Kjør den samme sjekken lokalt:
-
-```bash
-node --test "scripts/*.test.mjs" && node scripts/check.mjs
+```text
+kunde.yaml                    typen (kunde eller standard), kunden, godkjenneren, forvalteren og versjonene
+felles/                       det som gjelder hele org-en, med de samme leddene som en løsning
+  kilder/ forstaelse/         det som gjelder hele kunden (bare i et kunderepo)
+  krav/ design/               det som er felles for flere løsninger
+losninger/<losning>/          losning.yaml, kilder/, forstaelse/, krav/, design/, test/
+oppsett/                      konfigen i Neos format, slik Neo eksporterer den; manuelt/ for det som gjøres for hånd
+snapshots/<miljø>/            det som kjører i sandkassen og produksjonen, skrevet av forvaltning
+reports/                      planene fra Neo, skrevet av forvaltning
+integrasjoner/<system>/       hos-kunden.md, og det systemet trenger fra oss
+test/personaer/               testbrukerne, felles for alle løsningene
+.claude/neo.config.json       miljøene i Neo, og én del per system med referansene til hvelvet. Ingen hemmeligheter
+.claude/rules/                formen på hver mappe, slik sjekken leser den
 ```
 
-## Versjonene
+En mappe finnes når det er noe i den; malen har bare filene som gjelder hele repoet, og `oppsett/`, `snapshots/` og
+`reports/`. Konfigen i `oppsett/` er Neos eget format: Neo skriver filene ved et snapshot, og vurderer dem i planen.
+Hemmelighetene ligger i Azure Key Vault; repoet har bare referansene.
 
-`VERSION` er malens versjon, og `kunde.yaml` sier hvilken versjon av malen og pluginen repoet er laget fra. `check` sier
-fra (gult) når malen eller pluginen har en nyere versjon, og du bestemmer når du tar den inn.
+## Sjekken
+
+`check` kjører på hver PR: sjekken av repoet fra pluginen `forvaltning`, hentet i en låst versjon og kontrollert mot
+sha256, og gitleaks. Den ser at filene i `oppsett/` og `snapshots/` er Neos filer, ikke om innholdet er gyldig: det
+avgjør Neo i planen. Rødt stopper; gult sier fra. Lokalt kjører pluginen den samme sjekken, og `check` i
+`.claude/method.json` henter den låste versjonen. Versjonen byttes med en PR som endrer adressen og sha256 både i
+`.github/workflows/check.yml` og i `.claude/method.json`.
+
+Sett regler for `main` i GitHub (Settings → Rules → Rulesets) om org-en ikke har dem: krev PR, at `check` er grønn og
+godkjenning fra CODEOWNERS.
+
+## Versjonen
+
+`VERSION` er malens versjon, og `verktoy` i `kunde.yaml` sier hvilken versjon av malen og `forvaltning` repoet er
+laget for. En nyere versjon tas
+inn for hånd, i en PR.
 
 ## Lisens
 

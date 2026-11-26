@@ -1,6 +1,8 @@
+# De uendrede svarene fra Neo, før de er lagt ut som filer. Committes ikke.
 snapshots/*/raw/
 reports/*/raw/
-# Hemmelighetene fra kundens hvelv, hentet lokalt av et menneske (/forvaltning:hemmeligheter). Committes aldri.
+# Ingen hemmelighet ligger på disk i repoet: skriptene henter verdien fra hvelvet ved hvert kall. Står en slik fil her
+# likevel, committes den aldri.
 .env
 .env.*
 .keys/
