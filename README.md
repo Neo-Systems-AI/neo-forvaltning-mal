@@ -15,8 +15,8 @@ Start Claude Code og kjør `/forvaltning:oppstart`. Den lager repoet fra malen, 
 - **Før oppstarten:** org-admin i Neo har laget en maskinklient i sandkassen (*API-klienter → Ny API-klient*, slaget
   «Maskin») med scopene for konfig, og lagt hemmeligheten i kundens hvelv. Snapshot, plan og gjennomføring går med
   den, ikke gjennom MCP.
-- **Etter oppstarten:** et menneske henter hemmelighetene, også maskinklientens, til `.env.local` og `.keys/`
-  (`/forvaltning:hemmeligheter`). Ingen av dem committes.
+- **Hemmelighetene** ligger i hvelvet. Skriptene henter dem for kjøringen med din egen `az login`, og ingen kopi
+  lagres lokalt. `/forvaltning:hemmeligheter` viser om du når dem.
 
 Pluginene `forvaltning` og `solution` kommer fra markedsplassen
 [`neo-forvaltning`](https://github.com/Neo-Systems-AI/neo-forvaltning). I en klone av malen spør Claude Code om dem

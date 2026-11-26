@@ -31,7 +31,7 @@ kravene de bygger på. `type` i `kunde.yaml` sier om det er for én kunde (`kund
 - **Generert er generert:** `snapshots/` og `reports/` skrives av `forvaltning`, ikke for hånd.
 - **Ingen hemmeligheter i repoet.** Snapshot, plan og gjennomføring går med en maskinklient i sandkassen. Hemmeligheten
   dens og hemmelighetene til systemene ligger i kundens hvelv, og står i repoet bare som referanse (`$env`, `kilde`).
-  Et menneske henter dem til `.env.local` og `.keys/`; les dem aldri, og kjør aldri hentingen
+  Skriptene henter verdien fra hvelvet for kjøringen; hent aldri en verdi selv, og legg den aldri i en fil
   (`/forvaltning:hemmeligheter`).
 - **Kundespesifikt er kundens:** klienter, sertifikater, kontoer og delegeringer lages i kundens navn.
 - **Feilsøk med systemenes egne svar:** når noe stopper mellom Neo og et eksternt system, sammenlign det Neo gjorde

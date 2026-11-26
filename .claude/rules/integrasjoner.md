@@ -58,8 +58,8 @@ kart fra navnet pluginen ser etter, til navnet verdien har lokalt og hvor den li
 - **Formen er `{ "$env": "<NAVN>", "kilde": "azure-keyvault:<hvelv>/<navn>" }`,** og `"fil": true` når verdien er en
   fil, for eksempel en nøkkel (PEM). Ingen andre felt. Maskinklienten mot Neo har sin under
   `neo.byEnv.sandkasse.apiClient.clientSecret`.
-- **Et menneske henter verdiene** til `.env.local` og `.keys/` (`/forvaltning:hemmeligheter`), og skriptene leser dem
-  derfra. I en jobb i GitHub settes den samme variabelen fra jobbens hemmeligheter. Ingenting av det committes.
+- **Skriptene henter verdien fra hvelvet for kjøringen,** med personens egen innlogging, og ingen kopi lagres lokalt. I
+  en jobb i GitHub settes variabelen i `$env` fra jobbens hemmeligheter, og da brukes den.
 - **Klienter, sertifikater, kontoer og delegeringer** hører til kunden, og lages i kundens navn.
 
 Sjekken stopper en oppgave uten gyldig `status` eller `hvem`, en id som er brukt før, en `etter` som ikke finnes, en
