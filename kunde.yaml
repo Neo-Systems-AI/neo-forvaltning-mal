@@ -1,15 +1,17 @@
 # Kundefila: hva repoet er, hvem det er for, og hvem som godkjenner. Det tekniske (miljøene, maskinklienten og
 # systemene) står i .claude/neo.config.json. /forvaltning:oppstart fyller ut begge.
 
-# kunde: oppsettet for én kommune eller virksomhet. standard: standardløsninger som en partner eller Neo eier.
+# Hvem som eier løsningene. kunde: kunden (én kommune eller virksomhet). standard: Neo eller en partner, og kundene
+# tar dem i bruk. Strukturen er den samme.
 type: kunde
 
-# Den repoet er for: kunden, eller partneren eller Neo i et repo for standardløsninger.
+# Eieren: kunden, eller Neo eller partneren i et repo for standardløsninger.
 kunde:
   navn: "Eksempel kommune"
   organisasjonsnummer: ""
 
-# Den som godkjenner en endring hos kunden. Står også i .github/CODEOWNERS, som er det GitHub håndhever.
+# Den som godkjenner en endring. Hvordan godkjenningen håndheves (regler for main, CODEOWNERS eller annet), følger
+# rutinene til den som eier repoet.
 godkjenner:
   navn: ""
   github: ""
@@ -21,5 +23,5 @@ forvalter:
 
 # Versjonene repoet er laget for.
 verktoy:
-  mal: "0.6.1"
-  forvaltning: "0.4.1"
+  mal: "0.7.0"
+  forvaltning: "0.5.0"
