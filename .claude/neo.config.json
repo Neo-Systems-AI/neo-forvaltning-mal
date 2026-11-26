@@ -9,7 +9,7 @@
         "url": "https://<neo-adresse>",
         "apiClient": {
           "clientId": "<klient-id for maskinklienten i sandkassen>",
-          "clientSecret": { "$env": "NEO_SANDKASSE_KLIENT_HEMMELIGHET", "kilde": "<hvelvet og navnet>" }
+          "clientSecret": { "$env": "NEO_SANDKASSE_KLIENT_HEMMELIGHET", "kilde": "azure-keyvault:<hvelv>/<navn>" }
         }
       },
       "produksjon": { "mcpServer": "neo-produksjon", "url": "https://<neo-adresse>" }

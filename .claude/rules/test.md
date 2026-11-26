@@ -1,38 +1,54 @@
 ---
 paths:
-  - "losninger/*/6-test/**"
+  - "losninger/*/test/**"
   - "test/**"
 ---
 
 # Testene
 
-Testene prøver oppsettet i Neo slik en saksbehandler møter det, med syntetiske saker. Ingen ekte søkere eller personer.
+Testene prøver oppsettet i Neo slik en saksbehandler møter det, med syntetiske saker. Ingen ekte personer.
 
 | Hva | Hvor |
 |---|---|
-| Testcasene for én løsning, én fil per sak | `losninger/<losning>/6-test/testcaser/<navn>.yaml` |
-| Testplanen: hvilke testcaser som kjøres, i hvilken rekkefølge, av hvilken persona | `losninger/<losning>/6-test/testplan.md` |
-| Funnene fra én runde i UI, med observasjonene ordrett | `losninger/<losning>/6-test/runder/<nn>-<ÅÅÅÅ-MM-DD>.md` |
+| Testcasene for én løsning, én fil per sak | `losninger/<losning>/test/testcaser/<navn>.yaml` |
+| Testplanen, og det et menneske lager i sandkassen før runden | `losninger/<losning>/test/testplan.md` |
+| En runde i UI, med resultatene og funnene | `losninger/<losning>/test/runder/<ÅÅÅÅ-MM-DD>.md`, og `<ÅÅÅÅ-MM-DD>-2.md` for neste samme dag |
 | Testene som går gjennom flere løsninger | `test/<navn>.yaml` |
-
-## En testcase
+| Testbrukerne, felles for alle løsningene | `test/personaer/<navn>.yaml` ([personaene](personaer.md)) |
 
 ```yaml
+# losninger/parkering/test/testcaser/etter-fristen.yaml
 beskrivelse: En søknad som kommer inn etter fristen, og avvises
-persona: saksbehandler        # fila i organisasjon/team-og-roller/personaer/, uten .yaml
-inn:                          # saken slik den kommer inn: skjemaet, e-posten, vedleggene
+persona: saksbehandler        # test/personaer/saksbehandler.yaml
+inn:                          # saken slik kanalen leverer den
   mottatt: 2027-03-02
 forventet:
-  krav: [frist-mottatt]       # kravene testcasen prøver
+  krav: [frist-tre-uker]      # kravene testcasen prøver
   utfall: avvist
 ```
 
-- **`forventet`** sier det oppsettet skal gjøre med saken, og `forventet.krav` hvilke krav det prøver. Hvert krav
-  finnes i en `3-krav/`.
-- **`inn`** har formen til kanalen saken kommer fra. Den er fri.
-- **En test i `test/`** har i tillegg `losninger:`, med minst to løsninger den går gjennom (en e-post inn i innboksen
-  som havner i riktig løsning).
+- **`forventet`** sier hva oppsettet skal gjøre med saken, og `forventet.krav` hvilke krav den prøver. Kravene finnes
+  i en `krav/`.
+- **`persona`** er navnet på fila i `test/personaer/`, uten `.yaml`. En persona som ikke finnes, er gul.
+- **`inn`** har formen til kanalen saken kommer fra.
+- **En test i `test/`** har i tillegg `losninger:`, med minst to løsninger den går gjennom.
+- **En runde som er kjørt, endres ikke.** Neste runde er en ny fil, med datoen i navnet.
+- **Testplanen har et punkt per krav:** en overskrift med en yaml-blokk rett under som sier kravene punktet prøver.
+  Riggen og resten av planen står som vanlig tekst.
+
+````markdown
+<!-- losninger/parkering/test/testplan.md -->
+## p1 Søknaden kommer inn etter fristen
+
+```yaml
+krav: [frist-tre-uker]
+```
+
+Saksbehandleren ser at fristen er passert, og avslaget foreslås.
+````
+
 - **Passord og nøkler** står aldri i en testcase. Personaen har referansene.
 
-`check` sjekker at hver testcase har en beskrivelse og kravene den prøver, og at kravene finnes. En persona som ikke
-finnes, gir et gult funn: et repo for standardløsninger har ingen personaer.
+Sjekken stopper en testcase uten `beskrivelse` eller `forventet.krav`, et krav som ikke finnes, en runde som ikke heter
+etter datoen, noe annet i `test/` i en løsning enn `testcaser/`, `testplan.md` og `runder/`, og et krav i løsningen
+uten et punkt i testplanen når testplanen finnes.
