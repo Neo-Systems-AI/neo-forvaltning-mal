@@ -19,14 +19,14 @@ Løpet fra en idé til en løsning i bruk står i pluginen `solution`. Veien inn
 | Løsningene, hver med samme faste struktur | `losninger/<losning>/` | [løsningene](.claude/rules/losninger.md), [kravene](.claude/rules/krav.md) |
 | Testene, i løsningen og på tvers | `losninger/<losning>/6-test/`, `test/` | [testene](.claude/rules/test.md) |
 | Konfigfila pluginene leser: miljøene, MCP-serverne og systemene | `.claude/neo.config.json` | |
-| Det som kjører i Neo, id-ene per miljø, og planene | `snapshots/`, `state/`, `reports/` | Generert av `forvaltning` |
+| Det som kjører i Neo per miljø, og planene | `snapshots/`, `reports/` | Generert av `forvaltning` |
 | Sjekkene | `scripts/`, kjørt av `check` | `.claude/method.json` |
 
 ## Reglene
 
 - **Neo endres bare gjennom pluginen `forvaltning`, og bare etter en godkjent PR.** Godkjenneren står i `kunde.yaml` og
   `.github/CODEOWNERS`. Sandkassen endres først; produksjonen endres ved promotering i Neo, av kundens org-admin.
-- **Generert er generert:** `snapshots/`, `state/`, `reports/` og `integrasjoner/README.md` skrives av skript, ikke for
+- **Generert er generert:** `snapshots/`, `reports/` og `integrasjoner/README.md` skrives av skript, ikke for
   hånd.
 - **Ingen hemmeligheter i repoet.** Innloggingen mot Neo er personens egen, gjennom `/mcp`. Hemmelighetene til de
   eksterne systemene ligger i kundens hvelv, og står i repoet bare som referanse (`$env`, `kilde`). Et menneske henter

@@ -43,18 +43,31 @@ test("malen slik en kunde får den: bare gule funn", async () => {
   assert.ok(f.every((x) => x.level === "warn"));
 });
 
-test("rå svar og ugyldig JSON stoppes", async () => {
+test("rå svar, den gamle JSON-formen og en fil som ikke er fra Neo stoppes", async () => {
   const root = copy();
   mkdirSync(join(root, "snapshots/sandkasse/raw"), { recursive: true });
-  writeFileSync(join(root, "snapshots/sandkasse/raw/x.json"), "{}");
-  writeFileSync(join(root, "oppsett/list_case_types.json"), "{");
+  writeFileSync(join(root, "snapshots/sandkasse/raw/export_config.json"), "{}");
+  writeFileSync(join(root, "oppsett/list_case_types.json"), "[]");
+  mkdirSync(join(root, "oppsett/case-types"), { recursive: true });
+  writeFileSync(join(root, "oppsett/case-types/x.yaml"), "name: x\n");
   const fails = (await run(root, { offline: true })).filter((x) => x.level === "fail").map((x) => x.check);
-  assert.deepEqual(fails, ["oppsett", "oppsett"]);
+  assert.deepEqual(fails, ["oppsett", "oppsett", "oppsett"]);
+});
+
+test("en konfig-fil fra Neo, ikke-med.md og det manuelle går gjennom", async () => {
+  const root = copy();
+  mkdirSync(join(root, "oppsett/case-types"), { recursive: true });
+  writeFileSync(join(root, "oppsett/case-types/byggesak.yaml"), "apiVersion: neo-config/v1\nkind: caseType\nspec:\n  slug: byggesak\n");
+  mkdirSync(join(root, "snapshots/sandkasse"), { recursive: true });
+  writeFileSync(join(root, "snapshots/sandkasse/ikke-med.md"), "# Ikke med i filene\n");
+  writeFileSync(join(root, "oppsett/manuelt/maler.md"), "# Malene\n");
+  const fails = (await run(root, { offline: true })).filter((x) => x.level === "fail");
+  assert.deepEqual(fails, []);
 });
 
 test("en nyere versjon gir et gult funn", async () => {
-  const fetchText = async (u) => (u.endsWith("VERSION") ? "0.4.0\n" : JSON.stringify({ plugins: [{ name: "forvaltning", version: "0.1.0" }] }));
+  const fetchText = async (u) => (u.endsWith("VERSION") ? "0.5.0\n" : JSON.stringify({ plugins: [{ name: "forvaltning", version: "0.2.0" }] }));
   const f = (await run(copy(), { fetchText })).filter((x) => x.check === "versjon");
   assert.equal(f.length, 1);
-  assert.match(f[0].message, /Malen er 0.4.0/);
+  assert.match(f[0].message, /Malen er 0.5.0/);
 });

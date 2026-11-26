@@ -16,7 +16,7 @@ export const CHECKS = [
   { name: "kunde", about: "kunde.yaml finnes og har kunde, godkjenner og versjoner" },
   { name: "config", about: ".claude/neo.config.json er gyldig, har miljøene, og ingen hemmelighet står med verdi" },
   { name: "hemmeligheter", about: "Ingen .env-fil eller nøkkel er committet" },
-  { name: "oppsett", about: "Hver fil i oppsett/ og snapshots/ er gyldig JSON, og ingen rå svar er committet" },
+  { name: "oppsett", about: "Hver fil i oppsett/ og snapshots/ er en konfig-fil fra Neo (neo-config/v1), og ingen rå svar er committet" },
   { name: "godkjenner", about: "CODEOWNERS nevner en ekte godkjenner" },
   ...RESEARCH_CHECKS,
   ...STRUKTUR_CHECKS,
@@ -30,6 +30,17 @@ export const UPSTREAM = {
 };
 
 const walk = (dir) => (existsSync(dir) ? readdirSync(dir).flatMap((n) => (statSync(join(dir, n)).isDirectory() ? walk(join(dir, n)) : [join(dir, n)])) : []);
+
+// En fil i oppsett/ og snapshots/ er en konfig-fil i Neo sitt format, ett objekt per fil. Her sjekkes bare at den er det;
+// om innholdet er gyldig, avgjør Neo i planen (`/forvaltning:plan`). Unntak: README-ene, `ikke-med.md` fra snapshotet
+// og det som gjøres for hånd i `oppsett/manuelt/`.
+export function checkConfigFile(rel, text) {
+  if (/(^|\/)README\.md$/.test(rel) || /(^|\/)ikke-med\.md$/.test(rel) || /^oppsett\/manuelt\//.test(rel) || rel.endsWith(".gitkeep")) return [];
+  if (rel.endsWith(".json")) return [{ check: "oppsett", file: rel, message: "Formen fra før forvaltning 0.2.0. Ta et nytt snapshot (/forvaltning:snapshot) og bygg oppsettet fra filene Neo skriver" }];
+  if (!rel.endsWith(".yaml")) return [{ check: "oppsett", file: rel, message: "Ikke en konfig-fil. Oppsettet er .yaml-filer fra Neo; det som gjøres for hånd, står i oppsett/manuelt/" }];
+  const missing = [/^apiVersion: neo-config\/v1$/m, /^kind: \S+/m, /^spec:/m].filter((re) => !re.test(text));
+  return missing.length ? [{ check: "oppsett", file: rel, message: "Ikke en konfig-fil fra Neo: den må ha apiVersion: neo-config/v1, kind og spec øverst" }] : [];
+}
 
 // En nøkkel med et navn som dette er en hemmelighet, og skal stå som { "$env": … }, aldri med verdien.
 export const SECRET_KEY = /(passord|password|secret|hemmelig|token|apikey|api_key|privatekey|private_key|nokkel|nøkkel|^key$|keypem)/i;
@@ -99,13 +110,7 @@ export async function run(root, { offline = false, fetchText = (u) => fetch(u).t
   for (const file of [...walk(join(root, "oppsett")), ...walk(join(root, "snapshots"))]) {
     const rel = relative(root, file);
     if (/(^|\/)raw\//.test(rel)) f.push({ check: "oppsett", file: rel, message: "Et rått svar er committet. raw/ skal stå i .gitignore" });
-    else if (rel.endsWith(".json")) {
-      try {
-        JSON.parse(readFileSync(file, "utf8"));
-      } catch (e) {
-        f.push({ check: "oppsett", file: rel, message: `Ikke gyldig JSON: ${e.message}` });
-      }
-    }
+    else f.push(...checkConfigFile(rel, readFileSync(file, "utf8")));
   }
   f.push(...checkResearch(root));
   f.push(...checkStruktur(root, { secretKey: SECRET_KEY }));
