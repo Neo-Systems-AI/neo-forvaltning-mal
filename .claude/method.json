@@ -1,4 +1,4 @@
 {
   "setup": [],
-  "check": "f=\"$(mktemp -d)/sjekk.mjs\" && curl -fsSL https://raw.githubusercontent.com/Neo-Systems-AI/neo-forvaltning/3a1a1c30105d7a81e40f08b7f07dc6437bbf5a28/plugins/forvaltning/scripts/sjekk.mjs -o \"$f\" && echo \"b4f7883acb9fe1fb199f55abbc786cd1642b42879e7ad0520b7ea32714ac34ae  $f\" | shasum -a 256 -c - >/dev/null && node \"$f\" --base origin/main"
+  "check": "f=\"$(mktemp -d)/sjekk.mjs\" && curl -fsSL https://raw.githubusercontent.com/Neo-Systems-AI/neo-forvaltning/1f85c99f216ce93946d3b006acccf4ef4aa028f7/plugins/forvaltning/scripts/sjekk.mjs -o \"$f\" && echo \"26d0a2ddfd062851f3a5a763396fbf4e22d8c38867440b45d19b6c47d1ab0b1c  $f\" | shasum -a 256 -c - >/dev/null && node \"$f\" --base origin/main"
 }

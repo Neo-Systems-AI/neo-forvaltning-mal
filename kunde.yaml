@@ -21,5 +21,5 @@ forvalter:
 
 # Versjonene repoet er laget for.
 verktoy:
-  mal: "0.5.0"
-  forvaltning: "0.3.0"
+  mal: "0.6.0"
+  forvaltning: "0.4.0"

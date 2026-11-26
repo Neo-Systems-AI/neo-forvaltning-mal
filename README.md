@@ -13,10 +13,11 @@ Start Claude Code og kjør `/forvaltning:oppstart`. Den lager repoet fra malen, 
 `.claude/neo.config.json` (sandkassen, produksjonen og maskinklienten) og `CODEOWNERS`, og skrur på pluginene.
 
 - **Før oppstarten:** org-admin i Neo har laget en maskinklient i sandkassen (*API-klienter → Ny API-klient*, slaget
-  «Maskin») med scopene for konfig, og lagt hemmeligheten i kundens hvelv. Snapshot, plan og gjennomføring går med
-  den, ikke gjennom MCP.
-- **Hemmelighetene** ligger i hvelvet. Skriptene henter dem for kjøringen med din egen `az login`, og ingen kopi
-  lagres lokalt. `/forvaltning:hemmeligheter` viser om du når dem.
+  «Maskin») med scopene for konfig, og kunden har et Key Vault-hvelv. Snapshot, plan og gjennomføring går med
+  maskinklienten, ikke gjennom MCP.
+- **Nøklene** ligger bare i hvelvet, med faste navn pluginene bestemmer. Etter oppstarten legger du dem inn med én
+  kommando (`/forvaltning:nokler`), og skriptene henter dem for kjøringen med din egen `az login`. Ingen kopi lagres
+  lokalt.
 
 Pluginene `forvaltning` og `solution` kommer fra markedsplassen
 [`neo-forvaltning`](https://github.com/Neo-Systems-AI/neo-forvaltning). I en klone av malen spør Claude Code om dem
@@ -37,13 +38,13 @@ snapshots/<miljø>/            det som kjører i sandkassen og produksjonen, skr
 reports/                      planene fra Neo, skrevet av forvaltning
 integrasjoner/<system>/       hos-kunden.md, og det systemet trenger fra oss
 test/personaer/               testbrukerne, felles for alle løsningene
-.claude/neo.config.json       miljøene i Neo, maskinklienten, og én del per system. Hemmelighetene bare som referanser
+.claude/neo.config.json       hvelvet, miljøene i Neo, maskinklienten, og én del per system. Ingen hemmeligheter
 .claude/rules/                formen på hver mappe, slik sjekken leser den
 ```
 
 En mappe finnes når det er noe i den; malen har bare filene som gjelder hele repoet, og `oppsett/`, `snapshots/` og
 `reports/`. Konfigen i `oppsett/` er Neos eget format: Neo skriver filene ved et snapshot, og vurderer dem i planen.
-Hemmelighetene ligger i kundens hvelv; repoet har bare referansene.
+Nøklene ligger i kundens hvelv; repoet sier bare hvilket.
 
 ## Sjekken
 
