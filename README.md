@@ -51,7 +51,7 @@ Nøklene ligger i kundens hvelv; repoet sier bare hvilket.
 `check` kjører på hver PR: sjekken av repoet fra pluginen `forvaltning`, hentet i en låst versjon og kontrollert mot
 sha256, og gitleaks. Den ser at filene i `oppsett/` og `snapshots/` er Neos filer, ikke om innholdet er gyldig: det
 avgjør Neo i planen. Rødt stopper; gult sier fra. Lokalt kjører pluginen den samme sjekken, og `check` i
-`.claude/method.json` henter den låste versjonen. Versjonen byttes med en PR som endrer adressen og sha256 både i
+`.claude/method.json` henter den låste versjonen. Versjonen byttes med en PR som endrer taggen (`sjekk-v<versjon>`) og sha256 både i
 `.github/workflows/check.yml` og i `.claude/method.json`.
 
 Sett regler for `main` i GitHub (Settings → Rules → Rulesets) om org-en ikke har dem: krev PR, at `check` er grønn og
