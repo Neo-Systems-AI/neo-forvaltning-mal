@@ -14,7 +14,7 @@ pluginen til systemet. Her står hvor langt denne kunden er kommet.
 |---|---|
 | Det kunden selv gjør, med status og hvem | `integrasjoner/<system>/hos-kunden.md` |
 | Det systemet trenger fra oss, for eksempel Altinn-appen | `integrasjoner/<system>/<navn>/` |
-| Oppsettet av systemet, og referansene til hemmelighetene i hvelvet | `<system>` i `.claude/neo.config.json` |
+| Oppsettet av systemet (nøklene ligger i hvelvet, med faste navn) | `<system>` i `.claude/neo.config.json` |
 
 Noe annet i mappa til et system er rødt. Lista kunden jobber fra, på tvers av systemene, lages av sjekken
 (`sjekk.mjs hos-kunden` i pluginen `forvaltning`) og committes ikke.
@@ -39,29 +39,20 @@ Det som er spesielt for denne kunden. Fremgangsmåten står i oppskriften.
 - **`etter`** er oppgavene som må være ferdige først: `<id>` i samme system, eller `<system>/<id>` i et annet. De
   finnes.
 
-## Hemmelighetene
+## Nøklene
 
-Referansene står ved siden av oppsettet av systemet i `.claude/neo.config.json`, under `<system>.hemmeligheter`: et
-kart fra navnet pluginen ser etter, til navnet verdien har lokalt og hvor den ligger, i hvelvet til den som eier den
-(kundens for kundens systemer). Verdien står aldri i repoet. README-en til pluginen for systemet sier hvilke navn den trenger.
+Nøklene ligger bare i hvelvet til den som eier dem (kundens for kundens systemer). Config-fila sier bare hvilket hvelv
+(`"hvelv": "kv-kunde"`), og pluginene bestemmer navnene, i formen `<system>--<navn>`: `fiks--integrasjon-passord`,
+`maskinporten--<klient>-nokkel`, `neo--sandkasse-klient`. README-en til hver plugin sier hvilke den bruker.
 
-```json
-"maskinporten": {
-  "miljo": "test",
-  "klienter": { "fiks": { "clientId": "<klient-ID fra selvbetjeningen>", "scopes": ["ks:fiks"] } },
-  "hemmeligheter": {
-    "fiks-nokkel": { "$env": "MASKINPORTEN_FIKS_NOKKEL", "kilde": "azure-keyvault:kv-kunde/maskinporten-fiks-nokkel", "fil": true }
-  }
-}
-```
-
-- **Formen er `{ "$env": "<NAVN>", "kilde": "azure-keyvault:<hvelv>/<navn>" }`,** og `"fil": true` når verdien er en
-  fil, for eksempel en nøkkel (PEM). Ingen andre felt. Maskinklienten mot Neo har sin under
-  `neo.byEnv.sandkasse.apiClient.clientSecret`.
-- **Skriptene henter verdien fra hvelvet for kjøringen,** med personens egen innlogging, og ingen kopi lagres lokalt. I
-  en jobb i GitHub settes variabelen i `$env` fra jobbens hemmeligheter, og da brukes den.
+- **Ingen referanser i repoet.** Ingen `hemmeligheter`, `$env` eller `kilde` i config-fila.
+- **Én kommando legger dem inn:** `/forvaltning:nokler` viser hva pluginene som er på, trenger, og om det står i
+  hvelvet, og et menneske legger inn det som mangler med `fyll`. Når en plugin eller en klient kommer til, kjøres den
+  igjen.
+- **Skriptene henter nøkkelen fra hvelvet for kjøringen,** med personens egen innlogging, og ingen kopi lagres lokalt.
+  I en jobb i GitHub har jobbens hemmeligheter de samme navnene, med store bokstaver og `_`.
 - **Klienter, sertifikater, kontoer og delegeringer** hører til kunden, og lages i kundens navn.
 
 Sjekken stopper en oppgave uten gyldig `status` eller `hvem`, en id som er brukt før, en `etter` som ikke finnes, en
-referanse i en annen form eller utenfor `<system>.hemmeligheter`, en hemmelighet med verdi i config-fila eller i
-hvilken som helst YAML-fil i `integrasjoner/`, og en `hemmeligheter.yaml`.
+referanse eller `hemmeligheter` i config-fila, en hemmelighet med verdi i config-fila eller i hvilken som helst YAML-fil
+i `integrasjoner/`, og en `hemmeligheter.yaml`.

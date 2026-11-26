@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "hvelv": "<hvelv>",
   "neo": {
     "environments": ["sandkasse", "produksjon"],
     "defaultEnv": "sandkasse",
@@ -7,10 +8,7 @@
       "sandkasse": {
         "mcpServer": "neo-sandkasse",
         "url": "https://<neo-adresse>",
-        "apiClient": {
-          "clientId": "<klient-id for maskinklienten i sandkassen>",
-          "clientSecret": { "$env": "NEO_SANDKASSE_KLIENT_HEMMELIGHET", "kilde": "azure-keyvault:<hvelv>/<navn>" }
-        }
+        "apiClient": { "clientId": "<klient-id for maskinklienten i sandkassen>" }
       },
       "produksjon": { "mcpServer": "neo-produksjon", "url": "https://<neo-adresse>" }
     }

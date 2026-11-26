@@ -47,7 +47,7 @@ krav: [frist-tre-uker]
 Saksbehandleren ser at fristen er passert, og avslaget foreslås.
 ````
 
-- **Passord og nøkler** står aldri i en testcase. Personaen har referansene.
+- **Passord og nøkler** står aldri i en testcase eller en persona.
 
 Sjekken stopper en testcase uten `beskrivelse` eller `forventet.krav`, et krav som ikke finnes, en runde som ikke heter
 etter datoen, noe annet i `test/` i en løsning enn `testcaser/`, `testplan.md` og `runder/`, og et krav i løsningen
