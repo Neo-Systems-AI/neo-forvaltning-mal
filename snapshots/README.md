@@ -1,6 +1,6 @@
 # Snapshots
 
-Det som kjører i Neo, per miljø, hentet med `/forvaltning:snapshot <miljø>`. Neo skriver filene (`export_config`), i
+Det som kjører i Neo, per miljø, hentet med `/forvaltning:snapshot <miljø>`. Neo skriver filene (export), i
 samme form som `oppsett/`, så en fil kan kopieres dit som den er. `ikke-med.md` sier hva Neo ikke skriver som fil
 ennå. Git-historikken her er historikken til oppsettet. `raw/` er de uendrede svarene og committes ikke.
 
