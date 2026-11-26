@@ -1,4 +1,4 @@
-# Kundefila: hvem dette repoet forvalter for, og hvem som godkjenner. Det tekniske (miljøene, MCP-serverne og
+# Kundefila: hvem dette repoet forvalter for, og hvem som godkjenner. Det tekniske (miljøene, maskinklienten og
 # systemene) står i .claude/neo.config.json. /forvaltning:oppstart fyller ut begge.
 kunde:
   navn: "Eksempel kommune"

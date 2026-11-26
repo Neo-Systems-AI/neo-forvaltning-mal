@@ -20,10 +20,10 @@ GitHub fordi det er git-verktøyet vi kobler til i dag.
 2. **Sett regler for `main`** (Settings → Rules → Rulesets): krev PR, krev at `check` er grønn, krev godkjenning fra
    CODEOWNERS, og tillat bare merge commit. På et privat repo krever dette GitHub Team eller høyere.
 3. **Start Claude Code i repoet**, godta markedsplassen `neo-forvaltning`, og kjør `/forvaltning:oppstart`. Den
-   intervjuer, fyller ut `kunde.yaml`, `.claude/neo.config.json` og `CODEOWNERS`, og kobler til Neo. Org-admin i Neo må
-   først ha laget en kobling for Claude Code (*API-klienter → Koble til Claude*, slaget «Claude Code»), én i sandkassen
-   og én i produksjonen.
-4. **Hent hemmelighetene** til systemene du skal kalle (se under), og logg inn i Neo med `/mcp`.
+   intervjuer, fyller ut `kunde.yaml`, `.claude/neo.config.json` og `CODEOWNERS`, og registrerer maskinklienten. Org-admin
+   i Neo må først ha laget en maskinklient i sandkassen (*API-klienter → Ny API-klient*, slaget «Maskin») med scopene
+   for konfig, og lagt hemmeligheten i kundens hvelv.
+4. **Hent hemmelighetene**, også maskinklientens, til `.env.local` (se under).
 
 Et repo for standardløsninger trenger ikke `organisasjon/` og `profil.yaml`; slett dem i den første PR-en.
 

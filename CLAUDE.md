@@ -18,7 +18,7 @@ Løpet fra en idé til en løsning i bruk står i pluginen `solution`. Veien inn
 | Lista over det kunden må gjøre | `integrasjoner/README.md` | Generert av `scripts/hos-kunden.mjs` |
 | Løsningene, hver med samme faste struktur | `losninger/<losning>/` | [løsningene](.claude/rules/losninger.md), [kravene](.claude/rules/krav.md) |
 | Testene, i løsningen og på tvers | `losninger/<losning>/6-test/`, `test/` | [testene](.claude/rules/test.md) |
-| Konfigfila pluginene leser: miljøene, MCP-serverne og systemene | `.claude/neo.config.json` | |
+| Konfigfila pluginene leser: miljøene, maskinklienten og systemene | `.claude/neo.config.json` | |
 | Det som kjører i Neo per miljø, og planene | `snapshots/`, `reports/` | Generert av `forvaltning` |
 | Sjekkene | `scripts/`, kjørt av `check` | `.claude/method.json` |
 
@@ -28,9 +28,10 @@ Løpet fra en idé til en løsning i bruk står i pluginen `solution`. Veien inn
   `.github/CODEOWNERS`. Sandkassen endres først; produksjonen endres ved promotering i Neo, av kundens org-admin.
 - **Generert er generert:** `snapshots/`, `reports/` og `integrasjoner/README.md` skrives av skript, ikke for
   hånd.
-- **Ingen hemmeligheter i repoet.** Innloggingen mot Neo er personens egen, gjennom `/mcp`. Hemmelighetene til de
-  eksterne systemene ligger i kundens hvelv, og står i repoet bare som referanse (`$env`, `kilde`). Et menneske henter
-  dem til `.env.local` og `.keys/`; les dem aldri, og kjør aldri hentingen (`/forvaltning:hemmeligheter`).
+- **Ingen hemmeligheter i repoet.** Snapshot, plan og gjennomføring går med en maskinklient i sandkassen. Hemmeligheten
+  dens og hemmelighetene til de eksterne systemene ligger i kundens hvelv, og står i repoet bare som referanse (`$env`,
+  `kilde`). Et menneske henter dem til `.env.local` og `.keys/`; les dem aldri, og kjør aldri hentingen
+  (`/forvaltning:hemmeligheter`).
 - **Kundespesifikt er kundens:** klienter, sertifikater, kontoer og delegeringer lages i kundens navn, aldri i
   forvalterens.
 - **Feilsøk med systemenes egne svar:** når noe stopper mellom Neo og et eksternt system, sammenlign det Neo gjorde
