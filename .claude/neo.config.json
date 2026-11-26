@@ -1,14 +1,8 @@
 {
-  "version": 1,
+  "version": 2,
   "neo": {
-    "environments": ["development"],
-    "defaultEnv": "development",
-    "byEnv": {
-      "development": {
-        "url": "https://api-server-development.nicebay-f3a7b126.norwayeast.azurecontainerapps.io",
-        "mcpServer": "neo-development",
-        "org": ""
-      }
-    }
+    "url": "https://api-server-development.nicebay-f3a7b126.norwayeast.azurecontainerapps.io",
+    "org": "",
+    "mcpServer": "neo-development"
   }
 }

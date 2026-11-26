@@ -1,5 +1,5 @@
-# Kontrollen for repoet: hver sjekk er sin egen jobb og sin egen linje i PR-en. Jobben `check` samler dem; gjør den
-# påkrevd i regelsettet for `main` (se README).
+# Kontrollen av repoet: sjekken fra neo-forvaltning, i en låst versjon, og gitleaks. Jobben `check` samler dem; gjør den
+# påkrevd i regelsettet for `main`.
 name: check
 on:
   pull_request:
@@ -9,19 +9,32 @@ permissions:
   contents: read
 jobs:
   repo:
-    name: repo (repo.yaml, research, løsninger, oppsett mot skjemaet fra Neo, integrasjoner, tester)
+    name: repo (sjekken fra neo-forvaltning)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # hele historikken: sjekken av at kildene er uendret, leser den
+          fetch-depth: 0 # sjekken leser historikken til basen: en lagret kilde endres ikke
       - uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci --engine-strict
-      - run: node --test
-      - run: node scripts/check.mjs --annotate --summary
+          node-version: 22
+      # Sjekken er én fil uten avhengigheter fra pluginen solution. Den hentes i en låst versjon og kontrolleres mot
+      # sha256, fordi repoet ligger på GitHub Enterprise og neo-forvaltning på github.com. En ny versjon tas inn med en
+      # PR som bytter begge verdiene her og i .claude/method.json.
+      - name: Hent sjekken
+        env:
+          REF: "4443b01864a455caf4c3dc2a0dfe539fc71084f2"
+          SHA256: "36e9caaffe4b68e4631eb712d2fe0df4aaef28ff2d682556b90cbef3d54787ee"
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/Neo-Systems-AI/neo-forvaltning/$REF/plugins/solution/scripts/sjekk.mjs" -o "$RUNNER_TEMP/sjekk.mjs"
+          echo "$SHA256  $RUNNER_TEMP/sjekk.mjs" | sha256sum -c -
+      - name: Sjekken
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+        run: |
+          # Første push i et nytt repo har ingen forrige commit: da er det ingen endring å sammenligne kildene med.
+          git cat-file -e "$BASE^{commit}" 2>/dev/null || BASE=HEAD
+          node "$RUNNER_TEMP/sjekk.mjs" --base "$BASE" --annotate --summary
 
   secrets:
     name: secrets (gitleaks)
@@ -42,8 +55,8 @@ jobs:
           elif git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
             OPTS="$BEFORE..$SHA"
           else
-            # Det første pushet i et nytt repo har ingen forrige commit (before er bare nuller), og etter en
-            # force-push finnes den ikke lenger: da leses hele historikken fram til denne commiten.
+            # Første push i et nytt repo har ingen forrige commit, og etter en force-push finnes den ikke lenger: da
+            # leses hele historikken fram til denne commiten.
             OPTS="$SHA"
           fi
           if docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.21.2 git --no-banner --redact --log-opts="$OPTS" .; then

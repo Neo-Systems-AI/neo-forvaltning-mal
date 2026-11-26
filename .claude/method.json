@@ -1,4 +1,4 @@
 {
-  "setup": ["npm ci --engine-strict"],
-  "check": "node --test && node scripts/check.mjs"
+  "setup": [],
+  "check": "f=\"$(cd \"$(mktemp -d)\" && pwd -P)/sjekk.mjs\" && curl -fsSL https://raw.githubusercontent.com/Neo-Systems-AI/neo-forvaltning/4443b01864a455caf4c3dc2a0dfe539fc71084f2/plugins/solution/scripts/sjekk.mjs -o \"$f\" && echo \"36e9caaffe4b68e4631eb712d2fe0df4aaef28ff2d682556b90cbef3d54787ee  $f\" | shasum -a 256 -c - >/dev/null && node \"$f\" --base origin/main"
 }

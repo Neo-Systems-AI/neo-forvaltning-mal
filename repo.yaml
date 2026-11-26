@@ -1,18 +1,12 @@
-# Hva repoet er, og hvem som har ansvaret. Det tekniske (miljøet i Neo, org-en og MCP-serveren) står i
-# .claude/neo.config.json. /config:set-up-repo fyller ut begge.
+# Hva repoet er, og hvem som har ansvaret. /solution:set-up-repo fyller det ut. Godkjenneren står i .github/CODEOWNERS.
 
-# kunde: oppsettet for én kommune eller virksomhet. standard: standardløsninger en partner eller Neo eier.
+# kunde: oppsettet for én kommune eller virksomhet. standard: standardløsninger som en partner eller Neo eier.
 type: kunde
 
-# Den som eier oppsettet: kunden i et kunderepo, partneren eller Neo i et standardrepo.
+# Den som eier oppsettet: kunden (med organisasjonsnummeret), eller partneren eller Neo i et repo for standardløsninger.
 eier:
   navn: ""
   organisasjonsnummer: ""
-
-# Den som godkjenner en endring. Står også i .github/CODEOWNERS.
-godkjenner:
-  navn: ""
-  github: ""
 
 # Den som forvalter: eieren selv, Neo Systems, eller en partner med egen avtale med eieren.
 forvalter:
