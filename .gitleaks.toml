@@ -1,0 +1,12 @@
+# gitleaks leser denne fila i jobben `secrets` i check.yml. Reglene er standardreglene; unntaket under er smalt.
+[extend]
+useDefault = true
+
+# Neos konfigfiler (oppsett/ og snapshots/) har en nøkkel per felt, for eksempel `key: vilkar1_begrunnelse`.
+# Regelen generic-api-key tar «key:» foran et ord som ser tilfeldig ut, for en API-nøkkel. En nøkkel til et felt er
+# bare små bokstaver, tall og understrek, alene på linja; en ekte nøkkel har ikke den formen. Unntaket gjelder bare
+# linjer i den formen, i alle filer (et unntak med paths ville sluppet gjennom hele mappa).
+[allowlist]
+description = "Nøklene til feltene i Neos konfigfiler"
+regexTarget = "line"
+regexes = ['''^\s*-?\s*key:\s*["']?[a-z][a-z0-9_]*["']?\s*$''']
