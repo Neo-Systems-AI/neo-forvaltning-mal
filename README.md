@@ -25,9 +25,9 @@ felles/                       det som gjelder hele org-en, med de samme leddene 
   kilder/ forstaelse/         det som gjelder hele kunden (bare i et kunderepo)
   krav/ design/ oppsett/      det som er felles for flere løsninger
 losninger/<losning>/          losning.yaml, kilder/, forstaelse/, krav/, design/, oppsett/, test/
-integrasjoner/<system>/       hos-kunden.md, hemmeligheter.yaml, og det systemet trenger fra oss
+integrasjoner/<system>/       hos-kunden.md, og det systemet trenger fra oss
 test/personaer/               testbrukerne, felles for alle løsningene
-.claude/neo.config.json       Neo: adressen, org-en og MCP-serveren. Ingen hemmeligheter
+.claude/neo.config.json       Neo, og én del per system med referansene til hvelvet. Ingen hemmeligheter
 .claude/rules/                formen på hver mappe, slik sjekken leser den
 ```
 

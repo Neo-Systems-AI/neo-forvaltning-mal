@@ -10,7 +10,7 @@ kravene de bygger på. `type` i `repo.yaml` sier om det er for én kunde (`kunde
 |---|---|---|
 | Typen, eieren og forvalteren | `repo.yaml` | |
 | Godkjenneren | `.github/CODEOWNERS` | |
-| Neo: adressen, org-en og MCP-serveren | `.claude/neo.config.json` | |
+| Neo, og oppsettet av hvert system med referansene til hvelvet | `.claude/neo.config.json` | [integrasjonene](.claude/rules/integrasjoner.md) |
 | Det som gjelder hele org-en | `felles/` | [løsningene og `felles/`](.claude/rules/losninger.md) |
 | Løsningene | `losninger/<losning>/` | [løsningene](.claude/rules/losninger.md) |
 | Kildene og forståelsen | `kilder/`, `forstaelse/` | [kildene](.claude/rules/kilder.md), [forståelsen](.claude/rules/forstaelse.md) |
