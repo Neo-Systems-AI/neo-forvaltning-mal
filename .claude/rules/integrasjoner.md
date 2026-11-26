@@ -5,23 +5,22 @@ paths:
 
 # Integrasjonene
 
-Hvert system Neo kobles til hos kunden (Altinn, arkivet, Maskinporten, Entra, Exchange, KS Fiks og de andre), har en
-mappe her, med navnet på systemet i små bokstaver. Hvordan et system settes opp, er likt for alle kunder, og står i
-oppskriften i `docs/` i pluginen til systemet i [`neo-forvaltning`](https://github.com/Neo-Systems-AI/neo-forvaltning)
-(et system uten egen plugin står i `config`). Her står hvor langt denne kunden er kommet.
+Hvert system Neo kobles til hos kunden (Altinn, arkivet, Maskinporten, Entra, KS Fiks …) har en mappe her, med navnet
+på systemet i små bokstaver. Hvordan et system settes opp, er likt for alle kunder og står i oppskriften i `docs/` i
+pluginen til systemet. Her står hvor langt denne kunden er kommet.
 
 | Hva | Hvor |
 |---|---|
-| Oppsettet i Neo: klienten, appen, abonnementene, e-posten | `integrasjoner/<system>/neo.yaml` (formen settes av Neo) |
 | Det kunden selv gjør, med status og hvem | `integrasjoner/<system>/hos-kunden.md` |
-| Referansene til hemmelighetene i kundens hvelv | `integrasjoner/<system>/hemmeligheter.yaml` |
-| Endepunktene per miljø | `integrasjoner/<system>/miljoer/` (formen settes av Neo) |
+| Referansene til hemmelighetene i hvelvet | `integrasjoner/<system>/hemmeligheter.yaml` |
 | Det systemet trenger fra oss, for eksempel Altinn-appen | `integrasjoner/<system>/<navn>/` |
-| Lista over det kunden må gjøre, på tvers av systemene | `integrasjoner/README.md`, generert |
+
+Noe annet i mappa til et system er rødt. Lista kunden jobber fra, på tvers av systemene, lages av sjekken
+(`sjekk.mjs hos-kunden` i pluginen `solution`) og committes ikke.
 
 ## `hos-kunden.md`
 
-En oppgave er et item: en overskrift med id og tittel, og en yaml-blokk rett under.
+En oppgave er et item: `## <id> <tittel>` og en yaml-blokk rett under.
 
 ````markdown
 ## delegering Deleger tilgangen i Altinn til Neo
@@ -36,26 +35,25 @@ Det som er spesielt for denne kunden. Fremgangsmåten står i oppskriften.
 ````
 
 - **`hvem`** er rollen hos kunden som gjør det, ikke et navn.
-- **`etter`** er oppgavene som må være ferdige først: `<id>` i samme system, eller `<system>/<id>` i et annet.
-- **Lista i `integrasjoner/README.md` lages av `node scripts/hos-kunden.mjs`,** og skrives aldri for hånd. Den viser
-  det som kan gjøres nå, det som venter, og lenken til oppskriften. Kjør skriptet etter hver endring i en
-  `hos-kunden.md`; `check` stopper når lista ikke stemmer.
+- **`etter`** er oppgavene som må være ferdige først: `<id>` i samme system, eller `<system>/<id>` i et annet. De
+  finnes.
 
 ## `hemmeligheter.yaml`
 
-Et kart fra navnet på hemmeligheten til hvor den ligger. Verdien står aldri i repoet: den ligger i Azure Key Vault, i
-hvelvet til den som eier den (kundens for kundens systemer).
+Et kart fra navnet pluginen ser etter, til hvor verdien ligger i Azure Key Vault, i hvelvet til den som eier den
+(kundens for kundens systemer). Verdien står aldri i repoet.
 
 ```yaml
-klient-id:
-  $env: MASKINPORTEN_CLIENT_ID
-  kilde: azure-keyvault:<hvelv>/<navn>
-nokkel:
-  $env: MASKINPORTEN_KEY_FILE
-  kilde: azure-keyvault:<hvelv>/<navn>
-  fil: true                # verdien er en fil, og hentes til .keys/
+# integrasjoner/maskinporten/hemmeligheter.yaml
+fiks-nokkel:
+  kilde: azure-keyvault:kv-kunde/maskinporten-fiks-nokkel
+  fil: true                # verdien er en fil, for eksempel en nøkkel (PEM)
 ```
 
-Et menneske henter verdiene med sin egen innlogging (`/config:show-secrets`) til `.env.local` og `.keys/`, som aldri
-committes. Klienter, sertifikater, kontoer og delegeringer hører til kunden, og lages i kundens navn. `check` stopper en
-hemmelighet med verdi i hvilken som helst YAML-fil her.
+- **Formen er `{ kilde: azure-keyvault:<hvelv>/<navn> }`,** og `fil: true` for en fil. Ingen andre felt.
+- **Skriptene i pluginene henter verdien fra hvelvet ved hvert kall,** med personens egen innlogging. Ingen verdi
+  lagres på disk.
+- **Klienter, sertifikater, kontoer og delegeringer** hører til kunden, og lages i kundens navn.
+
+Sjekken stopper en oppgave uten gyldig `status` eller `hvem`, en id som er brukt før, en `etter` som ikke finnes, en
+referanse i en annen form, og en hemmelighet med verdi i hvilken som helst YAML-fil i `integrasjoner/`.

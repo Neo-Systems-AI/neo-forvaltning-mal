@@ -1,54 +1,40 @@
 ---
 paths:
   - "losninger/**"
+  - "felles/**"
 ---
 
-# Løsningene
+# Løsningene og `felles/`
 
-En løsning er en pakke av konfig i Neo for én sakstype eller én prosess, slik Neo selv grupperer den. Repoet kan ha
-mange, og hver har den samme faste strukturen:
+En løsning er konfigen i Neo for én sakstype eller én prosess, med det den bygger på. Mappa heter etter løsningen, med
+små bokstaver, tall og bindestrek (`losninger/parkering/`), og har bare dette:
 
 | Hva | Hvor | Formen |
 |---|---|---|
 | Hva løsningen er | `losning.yaml` | Under |
-| Det vi vet, ordrett med opphav | `1-kilder/` | [kildene](kilder.md) |
-| Hjemmelen, sakene og variantene, forløpet, data og regler, og dokumentene | `2-forstaelse/` | [forståelsen](forstaelse.md) |
-| Det som må holde | `3-krav/` | [kravene](krav.md) |
-| Valgene for løsningen | `4-design/` | Under |
-| Konfigen i Neos format, og hvilke krav hver fil oppfyller | `5-oppsett/`, `5-oppsett/spor.yaml` | [oppsettet](oppsett.md) |
-| Testcasene, testplanen og funnene per runde | `6-test/` | [testene](test.md) |
+| Det vi vet, ordrett med opphav | `kilder/` | [kildene](kilder.md) |
+| Hjemmelen, sakene og variantene, forløpet, data og regler, dokumentene | `forstaelse/` | [forståelsen](forstaelse.md) |
+| Det som må holde, og hva hvert krav ble | `krav/` | [kravene](krav.md) |
+| Valgene, med avvikene fra mønstrene | `design/` | [designet](design.md) |
+| Konfigen i Neos format | `oppsett/` | [oppsettet](oppsett.md) |
+| Testcasene, testplanen og rundene | `test/` | [testene](test.md) |
 
-En ny løsning lages med skriptet, som skriver `losning.yaml` i status `utkast` og registeret for kildene:
-
-```bash
-node scripts/ny-losning.mjs hc-parkering --formal "Behandle søknader om parkeringstillatelse" --eier "Kunden"
-```
-
-Mappa heter etter løsningen, med små bokstaver, tall og bindestrek. De andre mappene kommer når det er noe å legge i
-dem.
+En mappe finnes når det er noe i den. **`felles/`** har de samme leddene, for det som gjelder hele org-en eller flere
+løsninger: `kilder/` og `forstaelse/` (bare i et kunderepo), `krav/`, `design/` og `oppsett/`. Begge kan ha en
+`README.md`. Noe annet er rødt i sjekken.
 
 ## `losning.yaml`
 
 ```yaml
-formal: Behandle søknader om innovasjonstilskudd fra mottak til arkiv
-eier: Seksjon for tilskudd
-status: utkast           # utkast, i-test, i-bruk eller avviklet
-integrasjoner: [altinn, documaster]
-bygger-pa: egen          # eller { standard: <navn>, versjon: <versjon> } for en standardløsning som tilpasses
+formal: Behandle søknader om parkeringstillatelse for forflytningshemmede
+eier: Kunden
+status: utkast              # utkast, i-test, i-bruk eller avviklet
+integrasjoner: []           # mappene i integrasjoner/ løsningen bruker, for eksempel [altinn, documaster]
+bygger-pa: egen             # eller { standard: <navn>, versjon: <versjon> }
 ```
 
 - **`eier`** er den som eier løsningen: kunden, en partner eller Neo.
-- **`integrasjoner`** er systemene i `integrasjoner/` løsningen bruker, med navnet på mappa. Flytene viser til systemet
-  med det samme navnet. Er lista tom, står det `[]`.
-- **`bygger-pa`** sier om løsningen er bygget her, eller er en standardløsning som tilpasses. Det avgjøres i designet,
-  så det kan stå tomt så lenge løsningen er i `utkast`. Bygger den på en standard, står bare det kunden endrer, i
-  `5-oppsett/`.
-
-## `4-design/`
-
-Valgene som former oppsettet, skrevet som tilstand: hva som er valgt, hvorfor, og hvem som valgte det, med dato. Det
-som er felles med andre løsninger, står i `organisasjon/4-design/`, og designet viser dit. Hvorfor et valg ble endret,
-står i PR-en.
-
-`check` sjekker at hver løsning har `losning.yaml` med formål, eier, status og integrasjonene, og hva den bygger på
-når den er ute av utkast.
+- **`integrasjoner`** er en liste, også når den er tom. Et navn som ikke har en mappe i `integrasjoner/`, er gult.
+- **`bygger-pa`** avgjøres i designet: `egen`, eller standardløsningen og versjonen den er kopiert fra. Den kan stå
+  ute mens løsningen er i `utkast`, og kreves etter det.
+- **`status`** styrer kravene: ute av `utkast` sier hvert krav hva det ble (`blir`).
