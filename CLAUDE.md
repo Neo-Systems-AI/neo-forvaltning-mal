@@ -24,8 +24,10 @@ Hver mappe har en README med formen, og hvilket steg i løypa som skriver der. L
 
 - **Det som ikke har en form her, finnes ikke.** Ingen andre mapper eller filer enn dem README-ene beskriver; sjekken
   stopper dem.
-- **Neo endres bare gjennom pluginen `forvaltning`, og bare etter en godkjent PR,** fra `main` etter merge, og bare
-  sandkassen. Kundens org-admin promoterer til produksjonen i Neo.
+- **Fra repoet endres Neo bare gjennom pluginen `forvaltning`, og bare etter en godkjent PR,** fra `main` etter merge,
+  og bare sandkassen. Kundens org-admin promoterer til produksjonen i Neo.
+- **Det som endres i Neo, er like gyldig.** Oppsettet kan endres både i Neo og i filene; ta snapshot før hver plan, og
+  ta det som er endret i Neo, inn i `oppsett/` i samme PR. Planen sender alle filene og ville ellers satt det tilbake.
 - **Generert er generert:** `snapshots/` og `reports/` skrives av `forvaltning`, ikke for hånd.
 - **Ingen hemmeligheter i repoet.** Snapshot, plan og gjennomføring går med en maskinklient i sandkassen. Nøklene
   ligger bare i kundens hvelv, med faste navn, og skriptene henter dem for kjøringen. Hent eller legg aldri inn en

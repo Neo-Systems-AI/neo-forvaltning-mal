@@ -23,8 +23,8 @@ jobs:
       # PR som bytter begge verdiene her og i .claude/method.json.
       - name: Hent sjekken
         env:
-          REF: "sjekk-v4.0.0"
-          SHA256: "72aed5174e608d2c579a0d7873701de788d5e9a84c918db853b710c0fa51809b"
+          REF: "sjekk-v4.1.0"
+          SHA256: "6bb87f6721b2c1017fc4e808f704ff86e3f28b90bbf1ad394cdbcd125eb12d56"
         run: |
           curl -fsSL "https://raw.githubusercontent.com/Neo-Systems-AI/neo-forvaltning/$REF/plugins/forvaltning/scripts/sjekk.mjs" -o "$RUNNER_TEMP/sjekk.mjs"
           echo "$SHA256  $RUNNER_TEMP/sjekk.mjs" | sha256sum -c -

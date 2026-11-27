@@ -62,7 +62,8 @@ sha256 i `.github/workflows/check.yml` og `.claude/method.json`; `scripts/las-ma
 
 ## Godkjenningen
 
-Neo endres bare fra en PR som er merget: gjennomføringen kjører fra `main`, og bare planen som ble godkjent. Hvem som
+Fra repoet endres Neo bare fra en PR som er merget: gjennomføringen kjører fra `main`, og bare planen som ble godkjent.
+Det som endres i Neo, er like gyldig, og tas inn i `oppsett/` med snapshotet før neste plan. Hvem som
 godkjenner, og hvordan det håndheves, følger rutinene til den som eier repoet. Et forslag, ikke et krav: regler for
 `main` (Settings → Rules → Rulesets) som krever PR og at `check` er grønn, og eventuelt en `CODEOWNERS`.
 
